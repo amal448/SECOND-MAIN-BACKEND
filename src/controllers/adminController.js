@@ -44,6 +44,7 @@ module.exports = {
   },
 
   addDoctor: (req, res) => {
+    console.log("backcall...................");
     return new Promise((resolve, reject) => {
       const errMessage = {
         firstName: "",
@@ -52,70 +53,75 @@ module.exports = {
         mobile: "",
         dob: "",
         image: "",
-        // about:"",
         address: "",
         department: "",
         password: "",
-        // experience: "",
-        // CTC:"",
-        // certificate:"",
+     
       };
       const {
         firstName,
         lastName,
         dob,
-        experience,
         email,
         mobile,
         department,
         address,
         image,
+        password
       } = req.body;
       console.log(1);
+      console.log(req.body);
 
       if (
         firstName == "" ||
         lastName == "" ||
-        dob == "" ||
-        experience == "" ||
         email == "" ||
+        address == "" ||
         mobile == "" ||
         department == "" ||
-        address == "" ||
-        image == ""
+        dob == "" ||
+        image == "" ||
+        password ==""
+        //  experience == "" ||
       ) {
         for (const key in req.body) {
           if (req.body[key] == "") {
-            errMessage[key] = "please provide ";
+            errMessage={...errMessage,[key]:"please provide" + key}
           } else {
             delete errMessage[key];
           }
         }
-        console.log(1);
+        console.log(2);
         return res.status(406).json({ ...errMessage, ok: false });
       } else {
         console.log(1);
-        if (!EMAILREGEX.test(email)) {
-          return res.status(406).json({ email: "invalid email " });
-        }
 
-        if (!stringHasAnyNumber(mobile)) {
-          return res.status(406).json({ mobile: "invalid mobile " });
-        }
-        console.log(1);
+        // if (!EMAILREGEX.test(email)) {
+        //   return res.status(406).json({ email: "invalid email " });
+        // }
+
+        // if (!stringHasAnyNumber(mobile)) {
+        //   return res.status(406).json({ mobile: "invalid mobile " });
+        // }
+        console.log(2);
         try {
           Doctors.findOne({ email:email }).then((response) => {
-            if (!response) {
+            if (response) {
               return res.status(409).json({ email: "username already exist" });
             } else {
-              console.log(1);
-              console.log("res.body", response);
+              console.log("1doctorcheck");
+              // console.log("res.body", response);
+
+              req.body.password=passwordHash.generate(password)
+
+
+
               new Doctors({ ...req.body, block: false })
                 .save()
                 .then(async (response) => {
                   return res
                     .status(200)
-                    .json({response, message: "Approval is pending" });
+                    .json({response, message: "Added to the mongoDataBase" });
                 });
             }
           });
@@ -357,6 +363,20 @@ module.exports = {
     } catch (error) {
       res.status(500).json({ ERR: "can't create department" });
     }
+  },
+  getApplicantData:async(req,res)=>{
+    console.log("@getApplicant")
+  console.log(req.params);
+    const id=req.params.id
+    console.log("@getApplicantid")
+
+    console.log(id);
+    Applicant.findById(id).then((response)=>{
+      console.log("response123",response);
+      res.status(200).json({doctorData:response})
+    }).catch((error)=>{
+      console.log("error is occured",error);
+    })
   }
 
 };

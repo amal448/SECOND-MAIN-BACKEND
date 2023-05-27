@@ -13,4 +13,6 @@ router.post('/edit-doctor',adminController.editDoctor)
 router.get('/apply-doctor',adminController.getApplicant)
 router.get('/block-user/:id',adminController. blockUser)
 router.post('/add-department',adminController.addDepartment)
+router.get('/get-all-department',adminController.getAllDepartments)
+router.get('/view-doctor-request/:id',adminController.getApplicantData)
 module.exports=router; 
