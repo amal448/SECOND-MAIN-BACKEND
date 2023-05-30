@@ -15,4 +15,9 @@ router.get('/block-user/:id',adminController. blockUser)
 router.post('/add-department',adminController.addDepartment)
 router.get('/get-all-department',adminController.getAllDepartments)
 router.get('/view-doctor-request/:id',adminController.getApplicantData)
+router.patch('/approve-doctor/:id',adminController.doctorApproval)
+router.delete('/decline-doctor/:id',adminController.RejectApproval)
+router.delete('/delete-dep/:id',adminController.deleteDepartment)
+
+
 module.exports=router; 

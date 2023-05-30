@@ -9,7 +9,7 @@ const User=new mongoose.Schema({
     gender:String,
     password:String,
     block:Boolean,
-    isActive:Boolean
+    active:Boolean,
 })
 const Users=mongoose.model("users",User)
 module.exports=Users;
