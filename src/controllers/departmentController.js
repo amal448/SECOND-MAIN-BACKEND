@@ -8,11 +8,11 @@ model.exports ={
         try{
             const department=req.body
             const lowerCaseDepartment=department.trim().toUppercase
-            const checkDepartment=Departments.findOne({lowerCaseDepartment})
+            const checkDepartment=Department.findOne({lowerCaseDepartment})
     
             if(!checkDepartment){
     
-                const newDepartment= new Departments({
+                const newDepartment= new Department({
                     department:lowerCaseDepartment
                 });
                 newDepartment.save().then(async ()=>{

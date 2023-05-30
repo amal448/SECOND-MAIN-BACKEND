@@ -1,15 +1,17 @@
 const passwordHash = require("password-hash");
 const jwt = require("jsonwebtoken");
+const nodemailer = require("nodemailer");
 require("dotenv").config();
 
 const Users = require("../model/User");
 const Doctors = require("../model/Doctor");
+const Departments = require("../model/Department");
 const {
   EMAILREGEX,
   checkPasswordHasSpecialCharacters,
   stringHasAnyNumber,
 } = require("../utils/constants");
-const {checkPassword} = require("../helpers/userHelper");
+const { checkPassword } = require("../helpers/userHelper");
 
 module.exports = {
   signup: (req, res) => {
@@ -86,13 +88,38 @@ module.exports = {
         } else {
           req.body.password = passwordHash.generate(password);
 
-          delete req.body.confirmPassword
-          new Users({...req.body,block:false})
+          delete req.body.confirmPassword;
+          new Users({ ...req.body, block: false, active: false })
             .save()
             .then(async (response) => {
               delete req.body.password;
-              const token = await jwt.sign({ ...req.body }, process.env.KEY);
-              res.status(200).json({ token,response });
+
+              // let testAccount = await nodemailer.createTestAccount();
+
+              // create reusable transporter object using the default SMTP transport
+              let transporter = nodemailer.createTransport({
+                host: "smtp.gmail.com",
+                port: 465,
+                secure: true, // true for 465, false for other ports
+                auth: {
+                  user: process.env.EMAIL, // generated ethereal user
+                  pass: process.env.EMAIL_TEST_APP_PSWD, // generated ethereal password
+                },
+              });
+
+              // send mail with defined transport object
+              let token = await String(jwt.sign({ ...req.body }, process.env.KEY));
+              let newtoken = token.replace(/\./g, '$')
+              // newtoken = newtoken.replace(/\$/g, '.')
+              let info = await transporter.sendMail({
+                from: process.env.EMAIL, // sender address
+                to: email, // list of receivers
+                subject: "account activation link provided", // Subject line
+                // text: "Hello world?", // plain text body
+                html: `<b>click to the link for verification http://localhost:5173/activate-account/${newtoken}</b>`, // html body
+              });
+
+              res.status(200).json({ok:true,message: "check your email"});
             });
         }
       });
@@ -115,9 +142,9 @@ module.exports = {
             .status(406)
             .json({ type: "email", message: "user not found" });
         } else {
-          console.log("user",user)
+          console.log("user", user);
           user = user[0];
-          if (checkPassword( password,user.password)) {
+          if (checkPassword(password, user.password)) {
             const token = await jwt.sign({ ...user }, process.env.KEY);
             return res.status(200).json({ token, user });
           } else {
@@ -131,25 +158,42 @@ module.exports = {
       console.log(error);
       return res.status(500).json({ message: error.message });
     }
-  },getAllDoctors:(req,res)=>{
-    return new Promise ((resolve,reject)=>{
-
-      Doctors.find({}).then((response)=>{
-        console.log(response);
-        for(let i=0;i< response.length;i++)
-        {
-          console.log(response[i])
-          delete response[i].password
-        }
-        res.status(200).json({doctors:response})
-      })
-    })
   },
-
-
-
-
-
-
-
+  getAllDoctors: (req, res) => {
+    return new Promise((resolve, reject) => {
+      Doctors.find({}).then((response) => {
+        console.log(response);
+        for (let i = 0; i < response.length; i++) {
+          console.log(response[i]);
+          delete response[i].password;
+        }
+        res.status(200).json({ doctors: response });
+      });
+    });
+  },
+  getDepartments: async (req, res) => {
+    console.log("@getDepartment");
+    try {
+      const department = await Departments.find({});
+      console.log("department",department);
+      if (department) {
+        res.status(200).json({ response: department });
+      } else {
+        res.status(500).json({ message: "Some errors are occured here" });
+      }
+    } catch (error) {
+      console.log("error", error);
+      res.status(500).json({ message: "department not found" });
+    }
+  },
+  activetAccount:(req,res) => {
+    let {token} = req.params
+    token = token.replace(/\$/g, '.')
+    console.log(token);
+    const {email} = jwt.decode(token)
+    Users.updateOne({email},{$set:{active: true}}).then(result => {
+      res.status(200).json({ok:true,message: "useractivated"})
+    })
+    // Users.updateOne
+  }
 };
