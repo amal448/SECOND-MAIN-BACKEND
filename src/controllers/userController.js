@@ -2,10 +2,16 @@ const passwordHash = require("password-hash");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 require("dotenv").config();
-
+const Appointment = require("../model/appointment");
 const Users = require("../model/User");
 const Doctors = require("../model/Doctor");
 const Departments = require("../model/Department");
+const moment = require("moment");
+
+const Stripe = require("stripe");
+require("dotenv").config();
+const stripe = Stripe(process.env.STRIPE_KEY);
+
 const {
   EMAILREGEX,
   checkPasswordHasSpecialCharacters,
@@ -108,8 +114,10 @@ module.exports = {
               });
 
               // send mail with defined transport object
-              let token = await String(jwt.sign({ ...req.body }, process.env.KEY));
-              let newtoken = token.replace(/\./g, '$')
+              let token = await String(
+                jwt.sign({ ...req.body }, process.env.KEY)
+              );
+              let newtoken = token.replace(/\./g, "$");
               // newtoken = newtoken.replace(/\$/g, '.')
               let info = await transporter.sendMail({
                 from: process.env.EMAIL, // sender address
@@ -119,7 +127,7 @@ module.exports = {
                 html: `<b>click to the link for verification http://localhost:5173/activate-account/${newtoken}</b>`, // html body
               });
 
-              res.status(200).json({ok:true,message: "check your email"});
+              res.status(200).json({ ok: true, message: "check your email" });
             });
         }
       });
@@ -175,7 +183,7 @@ module.exports = {
     console.log("@getDepartment");
     try {
       const department = await Departments.find({});
-      console.log("department",department);
+      console.log("department", department);
       if (department) {
         res.status(200).json({ response: department });
       } else {
@@ -186,14 +194,151 @@ module.exports = {
       res.status(500).json({ message: "department not found" });
     }
   },
-  activetAccount:(req,res) => {
-    let {token} = req.params
-    token = token.replace(/\$/g, '.')
+  activetAccount: (req, res) => {
+    let { token } = req.params;
+    token = token.replace(/\$/g, ".");
     console.log(token);
-    const {email} = jwt.decode(token)
-    Users.updateOne({email},{$set:{active: true}}).then(result => {
-      res.status(200).json({ok:true,message: "useractivated"})
-    })
+    const { email } = jwt.decode(token);
+    Users.updateOne({ email }, { $set: { active: true } }).then((result) => {
+      res.status(200).json({ ok: true, message: "useractivated" });
+    });
     // Users.updateOne
-  }
+  },
+
+  departmentexpdoc: async (req, res) => {
+    try {
+      let doctors = await Doctors.find({ block: false });
+
+      let mostExperiencedDoctors = [];
+
+      doctors.forEach((doctor) => {
+        const department = doctor.department;
+        console.log("department", department);
+        console.log(doctor);
+        console.log("/////////////////////////");
+        if (
+          !mostExperiencedDoctors[department] ||
+          parseInt(doctor.experience) >
+            parseInt(mostExperiencedDoctors[department].experience)
+        ) {
+          mostExperiencedDoctors.push(doctor);
+          console.log("mostExperiencedDoctors", mostExperiencedDoctors);
+        }
+      });
+      // console.log(mostExperiencedDoctors);
+      console.log("llllllllllllllllllllllllllllllllllllllllll");
+      res.status(200).json({ response: mostExperiencedDoctors });
+    } catch (error) {
+      console.log(error);
+      res.status(500).json("Some error is happened here");
+    }
+  },
+  getdepartmentdoctors: async (req, res) => {
+    console.log("@getdepartmentfoctor");
+    console.log(req.params.department);
+    try {
+      const { department } = req.params;
+
+      console.log("dep ", department);
+      const departmentDoctors = await Doctors.find({ department });
+      if (department) {
+        console.log("departmentpopopop", departmentDoctors);
+        res.status(200).json(departmentDoctors);
+      } else {
+        console.log("department not found");
+      }
+    } catch (error) {
+      console.log("251 ", error);
+      res.status(500).json({ error: "Error retrieving doctors" });
+    }
+  },
+
+  checkAvailability: async (req, res) => {
+    console.log("Hello from check");
+    try {
+      const { date, doctorId } = req.body;
+      console.log(date);
+      console.log(doctorId);
+
+      let momentObj;
+
+      if (date && doctorId) {
+        momentObj = moment(date, "MM/DD/YYYY");
+        if (!momentObj.isValid()) {
+          console.log(`Invalid date format:${date}`);
+          res.status(400).json({ error: "Invalid date format" });
+          return;
+        }
+
+        const appointments = await Appointment.find({ doctorId, date });
+
+        if (
+          appointments &&
+          Array.isArray(appointments) &&
+          appointments.length > 0
+        ) {
+          const bookedTimes = appointments.map(
+            (appointment) => appointment.time
+          );
+          const bookedDates = appointments.map(
+            (appointment) => appointment.date
+          );
+          console.log("At if chck");
+
+          res.status(200).json({ bookedDates, bookedTimes });
+        } else {
+          console.log("At emplty chck");
+          res.status(200).json({ bookedDates: [], bookedTimes: [] });
+        }
+      } else {
+        console.log("here at elselast");
+        res.status(400).json({ error: "Invalid request parameters" });
+      }
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Server error" });
+    }
+  },
+  getSingleDoctor: async (req, res) => {
+    try {
+      console.log("evide keri single");
+      const { id } = req.params;
+
+      console.log("eee id", id);
+      if (id) {
+        let doctor = await Doctors.findById(id);
+        res.status(200).json({ response: doctor });
+      }
+    } catch (error) {
+      console.log("eee ", error);
+      res.status(400).json({ error: "Invalid data" });
+    }
+  },
+
+  // app.post('/create-checkout-session', async (req, res) => {
+  checkoutPayment: async (req, res) => {
+    console.log("at checkout");
+    const session = await stripe.checkout.sessions.create({
+      line_items: [
+        //till now rray cart items
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: "T-shirt",
+            },
+            unit_amount: 2000,
+          },
+          quantity: 1,
+        },
+      ],
+      mode: "payment",
+      // success_url: 'http:/localhost:5713/success',
+      // cancel_url: 'http:/localhost:5713/failure',
+
+      success_url: `${process.env.CLIENT_URL}/success`,
+      cancel_url: `${process.env.CLIENT_URL}/failure`,
+    });
+    res.send({ url: session.url });
+  },
 };
