@@ -7,4 +7,5 @@ const router=express.Router();
 // router.post('/apply-post',doctorController.ApplyforDoctor)
 router.post('/login',doctorController.login)
 // router.get('/get-all-doctors',doctorAuth,doctorController.getAllDoctors)
+router.put('/update-timeSlot',doctorAuth,doctorController.addDoctorTimeSlot)
 module.exports=router;

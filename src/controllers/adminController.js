@@ -5,6 +5,8 @@ const Users = require("../model/User");
 const Departments = require("../model/Department.js");
 const Applicant = require("../model/Doctorapply.js");
 const nodemailer = require("nodemailer");
+const moment=require("moment")
+
 const {
   checkPasswordHasSpecialCharacters,
   EMAILREGEX,
@@ -58,9 +60,11 @@ module.exports = {
         address: "",
         department: "",
         password: "",
-        CTC: "",
+        fees: "",
         about: "",
         experience: "",
+        startTime:"",
+        endtime:""
       };
       const {
         firstName,
@@ -72,12 +76,52 @@ module.exports = {
         address,
         image,
         password,
-        CTC,
+        fees,
         about,
         experience,
+        startTime,
+        endTime
       } = req.body;
       console.log(1);
       console.log(req.body);
+
+
+      const formattedStartedTime= moment(startTime,"hh:mmA")
+      const formattedEndTime=moment(endTime,"hh:mmA")
+
+      console.log("LLLLLLLLLLLLLLLLLLL")
+      console.log(formattedStartedTime);
+      console.log(formattedEndTime);
+
+      function getTimesBetween(start,end){
+          const times=[]
+          let currentTime =moment(start);
+
+          while(currentTime.isBefore(end)) {
+              times.push(currentTime.format("h:mm A"))
+              currentTime.add(1,'hour')
+          }
+
+          return times;
+      }
+
+      const timings= getTimesBetween(formattedStartedTime ,formattedEndTime)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
       if (
         firstName == "" ||
@@ -90,7 +134,7 @@ module.exports = {
         image == "" ||
         password == "" ||
         experience == "" ||
-        CTC == "" ||
+        fees == "" ||
         about == ""
       ) {
         for (const key in req.body) {
@@ -123,7 +167,7 @@ module.exports = {
 
               req.body.password = passwordHash.generate(password);
 
-              new Doctors({ ...req.body, block: false })
+              new Doctors({ ...req.body, block: false,timings })
                 .save()
                 .then(async (response) => {
                   return res
