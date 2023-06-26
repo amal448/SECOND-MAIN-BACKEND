@@ -167,7 +167,7 @@ module.exports = {
 
               req.body.password = passwordHash.generate(password);
 
-              new Doctors({ ...req.body, block: false,timings })
+              new Doctors({ ...req.body, block: false,timings,status:"Approved"})
                 .save()
                 .then(async (response) => {
                   return res
@@ -184,7 +184,7 @@ module.exports = {
   },
   // Get All Doctor
   getallDoctors: (req, res) => {
-    Doctors.find({ block: false }).then((response) => {
+    Doctors.find({}).then((response) => {
       console.log("heloo");
       res.status(200).json({ allDoctors: response });
     });
@@ -211,24 +211,42 @@ module.exports = {
     }
   },
 
-  deleteDepartment: async (req, res) => {
-    try {
-      console.log("emtered @admin deldep");
-      const { id } = req.params;
-      console.log(id);
-      const Deldepartment = await Departments.findByIdAndDelete(id);
+  // deleteDepartment: async (req, res) => {
+  //   try {
+  //     console.log("emtered @admin deldep");
+  //     const { id } = req.params;
+  //     console.log(id);
+  //     const Deldepartment = await Departments.findByIdAndDelete(id);
 
-      if (Deldepartment) {
-        const departments = await Departments.find({});
-        console.log(departments);
-        res.status(200).json(departments);
-      } else {
-        res.status(500).json({ err: "deletion failed" });
-      }
-    } catch (error) {
-      res.status(500).json({ err: "can't delete department" });
+  //     if (Deldepartment) {
+  //       const departments = await Departments.find({});
+  //       console.log(departments);
+  //       res.status(200).json(departments);
+  //     } else {
+  //       res.status(500).json({ err: "deletion failed" });
+  //     }
+  //   } catch (error) {
+  //     res.status(500).json({ err: "can't delete department" });
+  //   }
+  // },
+
+  editDepartment:async(req,res)=>{
+    console.log("kakakakakakakakakakakakakasiwediuwduhdoiwdhoiho")
+    try{
+
+      const {id} =req.params
+
+        const updatedepartment=await Departments.findById(id)
+        re.json.status(200).json({response:updatedepartment})
+      
+    }
+    catch(error)
+    {
+      res.status(500).json({ err: "can't edit department" });
+
     }
   },
+
   blockUser: async (req, res) => {
     await Users.updateOne({ _id: new ObjectId(req.params.id) }, [
       {
@@ -240,6 +258,33 @@ module.exports = {
               else: true,
             },
           },
+
+        },
+      },
+    ]).then((result) => {
+      console.log(result);
+      res.status(200).json({ ok: true });
+    });
+  },
+  
+  blockDoctor: async (req, res) => {
+    await Doctors.updateOne({ _id: new ObjectId(req.params.id) }, [
+      {
+        $set: {
+          block: {
+            $cond: {
+              if: { $eq: ["$block", true] },
+              then: false,
+              else: true,
+            },
+          },
+          status:{
+            $cond:{
+              if:{$eq:["$block",true]},
+              then:"Rejected",
+              else:"Approved"
+            }
+          }
         },
       },
     ]).then((result) => {
@@ -432,7 +477,8 @@ module.exports = {
       console.log(id);
       const approveDoctor = await Doctors.findByIdAndUpdate(
         { _id: id },
-        { block: false }
+        { block: false },
+        {status:"Approved"}
       );
 
       if (approveDoctor) {
@@ -484,7 +530,11 @@ module.exports = {
     try {
       const { id } = req.params;
       console.log(id);
-      const rejectDoctor = await Doctors.findByIdAndDelete(id);
+      // const rejectDoctor = await Doctors.findByIdAndDelete(id);
+      const rejectDoctor = await Doctors.findByIdAndUpdate( { _id: id },
+        { block: true },
+        {status:"Rejected"})
+
       console.log("rejectDoctor", rejectDoctor);
       if (rejectDoctor) {
         console.log("reject", rejectDoctor);

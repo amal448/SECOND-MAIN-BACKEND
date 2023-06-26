@@ -14,17 +14,9 @@ const Appointment=new mongoose.Schema({
     paymentOwner:String,
     paymentOwnerEmail:String
     
-    // firstName:String,
-    // lastName:String,
-    // email:String,
-    // mobile:String,
-    // gender:String,
-    // dob:String,
-    // appointmentTime:String,
-    // appointmentDate:Date,
-    // age:String,
-    // address:String,
-    // status:String,
-})
+    
+},
+{ timestamps: true }
+)
 const Appointments=mongoose.model("appointment",Appointment)
 module.exports =Appointments
