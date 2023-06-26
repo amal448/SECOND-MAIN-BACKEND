@@ -5,8 +5,10 @@ const moment=require("moment")
 const jwt =require("jsonwebtoken")
 const passwordHash=require("password-hash")
 const Doctors = require("../model/Doctor")
+const Users=require("../model/User")
 const Applications=require("../model/Doctorapply")
 const { EMAILREGEX, checkPasswordHasSpecialCharacters, stringHasAnyNumber} = require("../utils/constants");
+const Appointments = require("../model/appointment");
 
 
 
@@ -107,7 +109,7 @@ module.exports={
                         }
                         else{
                             console.log("res.body",response)
-                            new Doctors({...req.body,block:true,timings, doctorTimings:timeSlots }).save().then(async (response)=>{
+                            new Doctors({...req.body,block:true,timings,status:"pending", doctorTimings:timeSlots }).save().then(async (response)=>{
     
                                 return res.status(200).json({message:"Approval is pending"})
                             })
@@ -144,7 +146,7 @@ module.exports={
             }
             return res.status(406).json({...errMessage})
         }else {
-            Doctors.find({email}).then(async (doctor)=>{
+            Doctors.find({email,block:false}).then(async (doctor)=>{
                 console.log("hi",doctor)
                 if(doctor.length <=0)
                 {
@@ -230,11 +232,47 @@ module.exports={
         res.status(500).json({ err: "Can't update the time slots" });
 
         }
-    }
+    },
 
 
+    getPatients:async(req,res)=>{
+ 
+        try{ 
 
+            let doctorId=req.doctor
+            console.log(doctorId)
+    
+    let userIds=await Appointments.distinct("userId",{doctorId})  
+    console.log("userIds is here in appointment", userIds) 
+    
+    let data= await Users.find({_id:{$in:userIds}}).select('-password -mobile')
+            console.log("data is getPatients is here",data)
+    res.status(200).send(data);
 
-
+        }
+        catch(error){
+            res.status(500).send("Unable to fetch user data")
+        }
+    
+    
+    
+    
+    },
+    getDoctor: (req, res) => {
+        console.log("00000000000000000000000000000000000000000000000000000000000000000000000000")
+        try{
+          
+          const {id} =req.params
+          console.log(id)
+          Doctors.find({ _id: id }).then((response) => {
+            console.log("poooooooooooooooooooooooooooooooooooooooooooooo", response);
+            res.status(200).json({ doctor: response });
+          });
+        }
+        catch(error)
+        {
+          console.log(error)
+        }
    
+}
 }

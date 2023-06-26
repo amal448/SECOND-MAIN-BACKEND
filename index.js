@@ -10,7 +10,8 @@ const connect=require("./src/connection/db")
 const userRoutes=require("./src/routes/userRoutes")
 const adminRoutes=require("./src/routes/adminRoutes")
 const doctorRoutes=require("./src/routes/doctorRoute")
-
+const conversation=require("./src/routes/conversation")
+const message=require("./src/routes/messages")
 const app=express()
 
 app.use(cors({
@@ -35,6 +36,8 @@ app.set(connect((err)=>{
 app.use('/api/user',userRoutes)
 app.use('/api/doctor',doctorRoutes)
 app.use('/api/admin',adminRoutes)
+app.use('/api/conversations',conversation)
+app.use('/api/messages',message)
 
 // error handler
 

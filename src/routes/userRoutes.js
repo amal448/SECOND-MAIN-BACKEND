@@ -18,4 +18,10 @@ router.get('/department-doctors/:department',userController.getdepartmentdoctors
 router.post('/doctor/checkAvailability',userController.checkAvailability)
 // router.get('/get-doctor',userController.getSingleDoctor)
 router.post('/create-checkout-session',userController.checkoutPayment)
+router.post('/webhook', express.json({type: 'application/json'}),userController.webhook)
+router.post('/forgot-password',userController.forgotPassword)
+router.post('/reset-Password/:userId/:token',userController.resetPassword)
+router.get('/foractivate-account/:userid/:token',userController.activetidtoken)
+
+router.get('/:id',userController.getUser)
 module.exports=router;

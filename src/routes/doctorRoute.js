@@ -8,4 +8,9 @@ const router=express.Router();
 router.post('/login',doctorController.login)
 // router.get('/get-all-doctors',doctorAuth,doctorController.getAllDoctors)
 router.put('/update-timeSlot',doctorAuth,doctorController.addDoctorTimeSlot)
+router.get('/get-patients',doctorAuth,doctorController.getPatients)
+router.get('/:id',doctorController.getDoctor)
+
+
+
 module.exports=router;

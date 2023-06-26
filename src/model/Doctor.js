@@ -20,7 +20,8 @@ const Doctor=new mongoose.Schema({
     doctorTimings:Object,
     endTime:String,
     password:String,
-    block:Boolean
+    block:Boolean,
+    status:String
 })
 
 const Doctors=mongoose.model("doctors",Doctor)
