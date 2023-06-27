@@ -13,6 +13,7 @@ router.get('/get-all-doctors',userAuth, userController.getAllDoctors);
 router.post('/apply-doctor',userAuth,doctorController.ApplyforDoctor)
 router.get('/get-departments',userAuth,userController.getDepartments)
 router.get('/activate-account/:token',userController.activetAccount)
+<<<<<<< HEAD
 router.get('/experience-doctors',userController.departmentexpdoc)
 router.get('/department-doctors/:department',userController.getdepartmentdoctors)
 router.post('/doctor/checkAvailability',userController.checkAvailability)
@@ -24,4 +25,7 @@ router.post('/reset-Password/:userId/:token',userController.resetPassword)
 router.get('/foractivate-account/:userid/:token',userController.activetidtoken)
 
 router.get('/:id',userController.getUser)
+=======
+
+>>>>>>> parent of fe58e5b (payment started)
 module.exports=router;
