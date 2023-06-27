@@ -5,8 +5,6 @@ const Users = require("../model/User");
 const Departments = require("../model/Department.js");
 const Applicant = require("../model/Doctorapply.js");
 const nodemailer = require("nodemailer");
-const moment=require("moment")
-
 const {
   checkPasswordHasSpecialCharacters,
   EMAILREGEX,
@@ -60,11 +58,9 @@ module.exports = {
         address: "",
         department: "",
         password: "",
-        fees: "",
+        CTC: "",
         about: "",
         experience: "",
-        startTime:"",
-        endtime:""
       };
       const {
         firstName,
@@ -76,52 +72,12 @@ module.exports = {
         address,
         image,
         password,
-        fees,
+        CTC,
         about,
         experience,
-        startTime,
-        endTime
       } = req.body;
       console.log(1);
       console.log(req.body);
-
-
-      const formattedStartedTime= moment(startTime,"hh:mmA")
-      const formattedEndTime=moment(endTime,"hh:mmA")
-
-      console.log("LLLLLLLLLLLLLLLLLLL")
-      console.log(formattedStartedTime);
-      console.log(formattedEndTime);
-
-      function getTimesBetween(start,end){
-          const times=[]
-          let currentTime =moment(start);
-
-          while(currentTime.isBefore(end)) {
-              times.push(currentTime.format("h:mm A"))
-              currentTime.add(1,'hour')
-          }
-
-          return times;
-      }
-
-      const timings= getTimesBetween(formattedStartedTime ,formattedEndTime)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
       if (
         firstName == "" ||
@@ -134,7 +90,7 @@ module.exports = {
         image == "" ||
         password == "" ||
         experience == "" ||
-        fees == "" ||
+        CTC == "" ||
         about == ""
       ) {
         for (const key in req.body) {
@@ -167,7 +123,11 @@ module.exports = {
 
               req.body.password = passwordHash.generate(password);
 
+<<<<<<< HEAD
               new Doctors({ ...req.body, block: false,timings,status:"Approved"})
+=======
+              new Doctors({ ...req.body, block: false })
+>>>>>>> parent of fe58e5b (payment started)
                 .save()
                 .then(async (response) => {
                   return res

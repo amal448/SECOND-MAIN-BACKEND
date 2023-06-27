@@ -16,9 +16,6 @@ const Doctor=new mongoose.Schema({
     endTime:Number,
     timings:Array,
     fees:Number,
-    startTime:String,
-    doctorTimings:Object,
-    endTime:String,
     password:String,
     block:Boolean,
     status:String

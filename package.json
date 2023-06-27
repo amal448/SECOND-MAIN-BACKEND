@@ -16,11 +16,9 @@
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.0",
-    "moment": "^2.29.4",
     "mongoose": "^7.1.0",
     "nodemailer": "^6.9.2",
     "password-hash": "^1.2.2",
-    "stripe": "^12.9.0",
     "uuid": "^9.0.0"
   }
 }
