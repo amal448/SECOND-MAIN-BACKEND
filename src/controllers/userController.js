@@ -18,6 +18,7 @@ const {
   stringHasAnyNumber,
 } = require("../utils/constants");
 const { checkPassword } = require("../helpers/userHelper");
+const Appointments = require("../model/appointment");
 
 module.exports = {
   signup: (req, res) => {
@@ -88,8 +89,8 @@ module.exports = {
     console.log(req.body);
 
     try {
-      Users.find({ email }).then((res) => {
-        if (res.length > 0) {
+      Users.find({ email }).then((foundUsers) => {
+        if (foundUsers.length > 0) {
           return res.status(409).json({ email: "email already exist" });
         } else {
           req.body.password = passwordHash.generate(password);
@@ -97,7 +98,7 @@ module.exports = {
           delete req.body.confirmPassword;
           new Users({ ...req.body, block: false, active: false })
             .save()
-            .then(async (res) => {
+            .then(async (savedUser) => {
               delete req.body.password;
 
               // let testAccount = await nodemailer.createTestAccount();
@@ -324,7 +325,7 @@ module.exports = {
   },
   getSingleDoctor: async (req, res) => {
     try {
-      console.log("evide keri single");
+      console.log("evide keri single doctor");
       const { id } = req.params;
 
       console.log("eee id", id);
@@ -482,262 +483,90 @@ let eventType;
   // Return a 200 res to acknowledge receipt of the event
   res.send().end;
 },
-forgotPassword:async(req,res)=>{
-   const {email} =req.body
-  console.log("forepdokkkkkkkkkkkk")
-  console.log(req.body)
 
-   try{
-    console.log("is here")
-     let user=await Users.findOne({email})
-    if(!user)
+RazorPayment: async (req, res) => {
+  console.log("at Razor checkout");
+
+  const data=req.body
+  console.log(data)
+  try
     {
-      return res.status(500).json({ err: "No user exists with this email" });
+        // const line_items=req.body
 
-    }
-    const userObject = user.toObject(); 
-    const secret =user.password +process.env.KEY
-    console.log("user._id",user._id)
-    
-    // const token =jwt.sign({email:user.email,id:user._id},secret,{
-      //   // expiresIn:"30m"
-      // })
-      const token =await String(
-      jwt.sign({email:userObject.email,id:userObject._id
-      },secret
-      // {
-      //  expiresIn:"30m"
-      //    }
-      )
-      );
+        // const usdToInrRate=100;
+        // const usdAmount=line_items?.price;
+        // const inrAmount =usdAmount * usdToInrRate 
 
-      // console.log("token",token)
-let newtoken = token.replace(/\./g, "$");
-      console.log("token",newtoken)
-      console.log("user._id",user._id)
+  console.log("at try");
 
-// console.log("newtoken",newtoken) /activate-account/:userid/:token
-  // const link =`<a href="${process.env.CLIENT_URL}/reset-password/${user._id}/${newtoken}">Click to reset password </a>`;
-  const link =`<a href="${process.env.CLIENT_URL}/foractivate-account/${user._id}/${newtoken}">Click to reset password </a>`;
-  
-  let testAccount = await nodemailer.createTestAccount();
-
-  let transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true, // true for 465, false for other ports
-    auth: {
-      user: process.env.EMAIL, // generated ethereal user
-      pass: process.env.EMAIL_TEST_APP_PSWD, // generated ethereal password
-    },
-  });
-
-  // send mail with defined transport object
- 
-  let info = await transporter.sendMail({
-    from: process.env.EMAIL, // sender address
-    to: email, // list of receivers
-    subject: "Reset Password", // Subject line
-    // text: "Hello world?", // plain text body
-    html: link, // html body
-  });
+  console.log("data",data)
 
 
-
-
-}
-   catch(error)
-   {
-    console.log("is here error" )
-    console.log(error )
-
-    res.status(500).json({error:"Somthing Error"})
-
-   }
-   
-},
-resetPassword: async(req,res)=>{
-  try{
-    console.log("hwlwlwlwlwlwlwlw")
-    
-
-    const { id, token } = req.params;
-    const { password } = req.body;
-
-    console.log(id)
-    console.log(token)
-    const user = await Users.findOne({ _id: id });
-    if (!user) {
-      return res.status(500).json({ err: "Not verified" });
-  }
-  }catch (error) {
-    console.log("eoeoeoeoeoeoeoeo")
+  const {
+    doctor,
+    userId,
+    doctorId,
+    doctorImage,
+    doctorsDepartment,
+    date,
+    time,
+    price,
+    userName,
+    // userlastName,
+    useremail
+} = data;
      
-    return res.status(500).json({ err: "Reset password failed" });
-}
-},
-getUser: (req, res) => {
-console.log("00000000000000000000000000000000000000000000000000000000000000000000000000")
-try{
-  
-  const {id} =req.params
-  Users.find({id}).then((response) => {
-    console.log("poooooooooooooooooooooooooooooooooooooooooooooo", response);
-    res.status(200).json({ alluser: response });
-  });
-}
-catch(error)
-{
-  console.log(error)
-}
+
+      // const session = await stripe.checkout.sessions.create({
+     
+        
+      //   customer: customer.id,
+      //   mode: "payment",   
+      //   success_url: `${process.env.CLIENT_URL}/success`,
+      //   cancel_url: `${process.env.CLIENT_URL}/failure`,
+      // });
 
 
 
-},
 
+      const newAppointment =new Appointment({
 
-  checkoutPayment: async (req, res) => {
-    console.log("at checkout");
-
-    try
-      {
-          const line_items=req.body
-
-          const usdToInrRate=100;
-          const usdAmount=line_items?.price;
-          const inrAmount =usdAmount * usdToInrRate 
-
-    console.log("at try");
-
-
-          const customer = await stripe.customers.create({
-            metadata: {
-                userId: line_items.userId,
-                appointments: JSON.stringify(line_items)
-
-            }
-        })
-
-        const session = await stripe.checkout.sessions.create({
-          line_items: [
-            //till now rray cart items
-            {
-              price_data: {
-                currency: "inr",
-                product_data: {
-                  name: line_items?.doctor,
-                  images: [line_items?.doctorImage],
-                  description: line_items?.name,
-                  metadata: {
-                      id: line_items?.doctorId
-                  }
-                },
-                unit_amount: inrAmount,
-              },
-              quantity: 1,
-            },
-          ],
-          
-          customer: customer.id,
-          mode: "payment",   
-          success_url: `${process.env.CLIENT_URL}/success`,
-          cancel_url: `${process.env.CLIENT_URL}/failure`,
-        });
-        res.send({ url: session.url });
-
-
-
-      }catch(error){ 
-        console.log("error",error);
-        res.status(500).json(error)
-      } 
-   
-  },
-
-// Use this sample code to handle webhook events in your integration.
-
-
-// This is your Stripe CLI webhook secret for testing your endpoint locally.
-// whsec_26bfada796f5ae6ea48ffc9325cd5c07dd4ef084893a5b2b6285327d16f011fc
-
-webhook:async (req, res) => {
-  let endpointSecret = "whsec_26bfada796f5ae6ea48ffc9325cd5c07dd4ef084893a5b2b6285327d16f011fc";
-  const sig = req.headers['stripe-signature'];
-
-let data;
-let eventType;
-
-  if(endpointSecret){
-    console.log("at webhookkkkkkkkkkkkkkkkkkk")
-    const payload=req.body;
-    const payloadString =JSON.stringify(payload,null,2)
-    const header =stripe.webhooks.generateTestHeaderString({
-      payload:payloadString,
-      secret:endpointSecret
-    })
-    let event;
-
-    try {
-    console.log("at webhookkkkk tryyyyyyyyyyy")
-
-      event = stripe.webhooks.constructEvent(payloadString, header, endpointSecret);
-      console.log("Webhook verifieddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd")
-    
-    } catch (err) {
-      console.log(`Webhook Errorrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr: ${err.message}`)
-      res.status(400).send(`Webhook Error: ${err.message}`);
-      return;
-    }
-    data=event.data.object;
-    eventType=event.type
-  }
-  else{
-    console.log("at webhookkkkk else")
-
-      data=req.body.data.object;
-      eventType=req.body.type
-  }
-  // Handle the event
-  console.log("Handle the event")
-
-    if(eventType ==="checkout.session.completed") 
-    {
-      stripe.customers.retrieve(data.customer).then(
-        (customer)=>{
-
-          console.log("customer",customer);
-
-          const appointmentsData=JSON.parse(customer.metadata.appointments)
-
-          const newAppointment =new Appointment({
-
-            userId:customer?.metadata?.userId,
-            doctorId:appointmentsData?.doctorId,
-            doctorName:appointmentsData?.doctor,
-            doctorImage:appointmentsData?.doctorImage ,
-            department:appointmentsData?.doctorsDepartment ,
-            date :appointmentsData?.date ,
-            time:appointmentsData?.time ,
-            price:appointmentsData?.price ,
-            payment_status: data?.payment_status ,
-            paymentOwner:data?.customer_details?.email ,
-          })
-
-          newAppointment.save();
-          console.log("newAppointment")
-
-          console.log(customer)
-          console.log("data",data)
-
-        }
-      ).catch(err=>{
-        console.log(err.message);
+        userId:userId,
+        doctorId:doctorId,
+        doctorName:doctor,
+        doctorImage:doctorImage ,
+        department:doctorsDepartment ,
+        date :date ,
+        time:time ,
+        price:price ,
+        payment_status: "paid" ,
+        // paymentOwner:userName + userlastName,
+        paymentOwner:userName,
+        paymentOwnerEmail:useremail
       })
-    }
 
-  // Return a 200 res to acknowledge receipt of the event
-  res.send().end;
-},
+      newAppointment.save();
+      console.log("newAppointment")
+
+      // console.log(customer)
+    
+      // res.send({ url: session.url });
+
+      res.status(200).json({ message: "Appointment created successfully" })
+
+    }catch(error){ 
+      console.log("error",error);
+      res.status(500).json(error)
+    } 
+ 
+},   
+
+
+
+
+
+
+
 forgotPassword:async(req,res)=>{
    const {email} =req.body
   console.log("forepdokkkkkkkkkkkk")
@@ -836,8 +665,9 @@ getUser: (req, res) => {
 console.log("00000000000000000000000000000000000000000000000000000000000000000000000000")
 try{
   
-  const {id} =req.params
-  Users.find({id}).then((response) => {
+  const {userId} =req.params
+  console.log("id",userId)
+  Users.find({ _id: userId }).then((response) => {
     console.log("poooooooooooooooooooooooooooooooooooooooooooooo", response);
     res.status(200).json({ alluser: response });
   });
@@ -850,781 +680,21 @@ catch(error)
 
 
 },
+bookhistory:async(req,res)=>{
+  try
+  {
+   const userId=req.params
+    console.log("userId",userId)
+    let  Appointmentdata=await Appointments.find(userId)
 
-
-  checkoutPayment: async (req, res) => {
-    console.log("at checkout");
-
-    try
-      {
-          const line_items=req.body
-
-          const usdToInrRate=100;
-          const usdAmount=line_items?.price;
-          const inrAmount =usdAmount * usdToInrRate 
-
-    console.log("at try");
-
-
-          const customer = await stripe.customers.create({
-            metadata: {
-                userId: line_items.userId,
-                appointments: JSON.stringify(line_items)
-
-            }
-        })
-
-        const session = await stripe.checkout.sessions.create({
-          line_items: [
-            //till now rray cart items
-            {
-              price_data: {
-                currency: "inr",
-                product_data: {
-                  name: line_items?.doctor,
-                  images: [line_items?.doctorImage],
-                  description: line_items?.name,
-                  metadata: {
-                      id: line_items?.doctorId
-                  }
-                },
-                unit_amount: inrAmount,
-              },
-              quantity: 1,
-            },
-          ],
-          
-          customer: customer.id,
-          mode: "payment",   
-          success_url: `${process.env.CLIENT_URL}/success`,
-          cancel_url: `${process.env.CLIENT_URL}/failure`,
-        });
-        res.send({ url: session.url });
-
-
-
-      }catch(error){ 
-        console.log("error",error);
-        res.status(500).json(error)
-      } 
-   
-  },
-
-// Use this sample code to handle webhook events in your integration.
-
-
-// This is your Stripe CLI webhook secret for testing your endpoint locally.
-// whsec_26bfada796f5ae6ea48ffc9325cd5c07dd4ef084893a5b2b6285327d16f011fc
-
-webhook:async (req, res) => {
-  let endpointSecret = "whsec_26bfada796f5ae6ea48ffc9325cd5c07dd4ef084893a5b2b6285327d16f011fc";
-  const sig = req.headers['stripe-signature'];
-
-let data;
-let eventType;
-
-  if(endpointSecret){
-    console.log("at webhookkkkkkkkkkkkkkkkkkk")
-    const payload=req.body;
-    const payloadString =JSON.stringify(payload,null,2)
-    const header =stripe.webhooks.generateTestHeaderString({
-      payload:payloadString,
-      secret:endpointSecret
-    })
-    let event;
-
-    try {
-    console.log("at webhookkkkk tryyyyyyyyyyy")
-
-      event = stripe.webhooks.constructEvent(payloadString, header, endpointSecret);
-      console.log("Webhook verifieddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd")
-    
-    } catch (err) {
-      console.log(`Webhook Errorrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr: ${err.message}`)
-      res.status(400).send(`Webhook Error: ${err.message}`);
-      return;
-    }
-    data=event.data.object;
-    eventType=event.type
+  console.log(Appointmentdata)
+    res.send(Appointmentdata)
+}
+  catch(error)
+  {
+    console.log(error)
   }
-  else{
-    console.log("at webhookkkkk else")
-
-      data=req.body.data.object;
-      eventType=req.body.type
-  }
-  // Handle the event
-  console.log("Handle the event")
-
-    if(eventType ==="checkout.session.completed") 
-    {
-      stripe.customers.retrieve(data.customer).then(
-        (customer)=>{
-
-          console.log("customer",customer);
-
-          const appointmentsData=JSON.parse(customer.metadata.appointments)
-
-          const newAppointment =new Appointment({
-
-            userId:customer?.metadata?.userId,
-            doctorId:appointmentsData?.doctorId,
-            doctorName:appointmentsData?.doctor,
-            doctorImage:appointmentsData?.doctorImage ,
-            department:appointmentsData?.doctorsDepartment ,
-            date :appointmentsData?.date ,
-            time:appointmentsData?.time ,
-            price:appointmentsData?.price ,
-            payment_status: data?.payment_status ,
-            paymentOwner:data?.customer_details?.email ,
-          })
-
-          newAppointment.save();
-          console.log("newAppointment")
-
-          console.log(customer)
-          console.log("data",data)
-
-        }
-      ).catch(err=>{
-        console.log(err.message);
-      })
-    }
-
-  // Return a 200 res to acknowledge receipt of the event
-  // res.send().end;
-  res.send().end();
-
-},
-forgotPassword:async(req,res)=>{
-   const {email} =req.body
-  console.log("forepdokkkkkkkkkkkk")
-  console.log(req.body)
-
-   try{
-    console.log("is here")
-     let user=await Users.findOne({email})
-    if(!user)
-    {
-      return res.status(500).json({ err: "No user exists with this email" });
-
-    }
-    const userObject = user.toObject(); 
-    const secret =user.password +process.env.KEY
-    console.log("user._id",user._id)
-    
-    // const token =jwt.sign({email:user.email,id:user._id},secret,{
-      //   // expiresIn:"30m"
-      // })
-      const token =await String(
-      jwt.sign({email:userObject.email,id:userObject._id
-      },secret
-      // {
-      //  expiresIn:"30m"
-      //    }
-      )
-      );
-
-      // console.log("token",token)
-let newtoken = token.replace(/\./g, "$");
-      console.log("token",newtoken)
-      console.log("user._id",user._id)
-
-// console.log("newtoken",newtoken) /activate-account/:userid/:token
-  // const link =`<a href="${process.env.CLIENT_URL}/reset-password/${user._id}/${newtoken}">Click to reset password </a>`;
-  const link =`<a href="${process.env.CLIENT_URL}/foractivate-account/${user._id}/${newtoken}">Click to reset password </a>`;
-  
-  let testAccount = await nodemailer.createTestAccount();
-
-  let transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true, // true for 465, false for other ports
-    auth: {
-      user: process.env.EMAIL, // generated ethereal user
-      pass: process.env.EMAIL_TEST_APP_PSWD, // generated ethereal password
-    },
-  });
-
-  // send mail with defined transport object
- 
-  let info = await transporter.sendMail({
-    from: process.env.EMAIL, // sender address
-    to: email, // list of receivers
-    subject: "Reset Password", // Subject line
-    // text: "Hello world?", // plain text body
-    html: link, // html body
-  });
-
-
-
-
 }
-   catch(error)
-   {
-    console.log("is here error" )
-    console.log(error )
-
-    res.status(500).json({error:"Somthing Error"})
-
-   }
-   
-},
-resetPassword: async(req,res)=>{
-  try{
-    console.log("hwlwlwlwlwlwlwlw")
-    
-
-    const { id, token } = req.params;
-    const { password } = req.body;
-
-    console.log(id)
-    console.log(token)
-    const user = await Users.findOne({ _id: id });
-    if (!user) {
-      return res.status(500).json({ err: "Not verified" });
-  }
-  }catch (error) {
-    console.log("eoeoeoeoeoeoeoeo")
-     
-    return res.status(500).json({ err: "Reset password failed" });
-}
-},
-getUser: (req, res) => {
-console.log("00000000000000000000000000000000000000000000000000000000000000000000000000")
-try{
-  
-  const {id} =req.params
-  Users.find({id}).then((response) => {
-    console.log("poooooooooooooooooooooooooooooooooooooooooooooo", response);
-    res.status(200).json({ alluser: response });
-  });
-}
-catch(error)
-{
-  console.log(error)
-}
-
-
-
-},
-
-
-  checkoutPayment: async (req, res) => {
-    console.log("at checkout");
-
-    try
-      {
-          const line_items=req.body
-
-          const usdToInrRate=100;
-          const usdAmount=line_items?.price;
-          const inrAmount =usdAmount * usdToInrRate 
-
-    console.log("at try");
-
-
-          const customer = await stripe.customers.create({
-            metadata: {
-                userId: line_items.userId,
-                appointments: JSON.stringify(line_items)
-
-            }
-        })
-
-        const session = await stripe.checkout.sessions.create({
-          line_items: [
-            //till now rray cart items
-            {
-              price_data: {
-                currency: "inr",
-                product_data: {
-                  name: line_items?.doctor,
-                  images: [line_items?.doctorImage],
-                  description: line_items?.name,
-                  metadata: {
-                      id: line_items?.doctorId
-                  }
-                },
-                unit_amount: inrAmount,
-              },
-              quantity: 1,
-            },
-          ],
-          
-          customer: customer.id,
-          mode: "payment",   
-          success_url: `${process.env.CLIENT_URL}/success`,
-          cancel_url: `${process.env.CLIENT_URL}/failure`,
-        });
-        res.send({ url: session.url });
-
-
-
-      }catch(error){ 
-        console.log("error",error);
-        res.status(500).json(error)
-      } 
-   
-  },
-
-// Use this sample code to handle webhook events in your integration.
-
-
-// This is your Stripe CLI webhook secret for testing your endpoint locally.
-// whsec_26bfada796f5ae6ea48ffc9325cd5c07dd4ef084893a5b2b6285327d16f011fc
-
-webhook:async (req, res) => {
-  let endpointSecret = "whsec_26bfada796f5ae6ea48ffc9325cd5c07dd4ef084893a5b2b6285327d16f011fc";
-  const sig = req.headers['stripe-signature'];
-
-let data;
-let eventType;
-
-  if(endpointSecret){
-    console.log("at webhookkkkkkkkkkkkkkkkkkk")
-    const payload=req.body;
-    const payloadString =JSON.stringify(payload,null,2)
-    const header =stripe.webhooks.generateTestHeaderString({
-      payload:payloadString,
-      secret:endpointSecret
-    })
-    let event;
-
-    try {
-    console.log("at webhookkkkk tryyyyyyyyyyy")
-
-      event = stripe.webhooks.constructEvent(payloadString, header, endpointSecret);
-      console.log("Webhook verifieddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd")
-    
-    } catch (err) {
-      console.log(`Webhook Errorrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr: ${err.message}`)
-      res.status(400).send(`Webhook Error: ${err.message}`);
-      return;
-    }
-    data=event.data.object;
-    eventType=event.type
-  }
-  else{
-    console.log("at webhookkkkk else")
-
-      data=req.body.data.object;
-      eventType=req.body.type
-  }
-  // Handle the event
-  console.log("Handle the event")
-
-    if(eventType ==="checkout.session.completed") 
-    {
-      // stripe.customers.retrieve(data.customer).then(
-      stripe.customers.retrieve(data.customer_details.id).then(
-
-        (customer)=>{
-
-          console.log("customer",customer);
-
-          const appointmentsData=JSON.parse(customer.metadata.appointments)
-
-          const newAppointment =new Appointment({
-
-            userId:customer?.metadata?.userId,
-            doctorId:appointmentsData?.doctorId,
-            doctorName:appointmentsData?.doctor,
-            doctorImage:appointmentsData?.doctorImage ,
-            department:appointmentsData?.doctorsDepartment ,
-            date :appointmentsData?.date ,
-            time:appointmentsData?.time ,
-            price:appointmentsData?.price ,
-            payment_status: data?.payment_status ,
-            paymentOwner:data?.customer_details?.email ,
-          })
-
-          newAppointment.save();
-          console.log("newAppointment")
-
-          console.log(customer)
-          console.log("data",data)
-
-        }
-      ).catch(err=>{
-        console.log(err.message);
-      })
-    }
-
-  // Return a 200 res to acknowledge receipt of the event
-  res.send().end;
-},
-forgotPassword:async(req,res)=>{
-   const {email} =req.body
-  console.log("forepdokkkkkkkkkkkk")
-  console.log(req.body)
-
-   try{
-    console.log("is here")
-     let user=await Users.findOne({email})
-    if(!user)
-    {
-      return res.status(500).json({ err: "No user exists with this email" });
-
-    }
-    const userObject = user.toObject(); 
-    const secret =user.password +process.env.KEY
-    console.log("user._id",user._id)
-    
-    // const token =jwt.sign({email:user.email,id:user._id},secret,{
-      //   // expiresIn:"30m"
-      // })
-      const token =await String(
-      jwt.sign({email:userObject.email,id:userObject._id
-      },secret
-      // {
-      //  expiresIn:"30m"
-      //    }
-      )
-      );
-
-      // console.log("token",token)
-let newtoken = token.replace(/\./g, "$");
-      console.log("token",newtoken)
-      console.log("user._id",user._id)
-
-// console.log("newtoken",newtoken) /activate-account/:userid/:token
-  // const link =`<a href="${process.env.CLIENT_URL}/reset-password/${user._id}/${newtoken}">Click to reset password </a>`;
-  const link =`<a href="${process.env.CLIENT_URL}/foractivate-account/${user._id}/${newtoken}">Click to reset password </a>`;
-  
-  let testAccount = await nodemailer.createTestAccount();
-
-  let transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true, // true for 465, false for other ports
-    auth: {
-      user: process.env.EMAIL, // generated ethereal user
-      pass: process.env.EMAIL_TEST_APP_PSWD, // generated ethereal password
-    },
-  });
-
-  // send mail with defined transport object
- 
-  let info = await transporter.sendMail({
-    from: process.env.EMAIL, // sender address
-    to: email, // list of receivers
-    subject: "Reset Password", // Subject line
-    // text: "Hello world?", // plain text body
-    html: link, // html body
-  });
-
-
-
-
-}
-   catch(error)
-   {
-    console.log("is here error" )
-    console.log(error )
-
-    res.status(500).json({error:"Somthing Error"})
-
-   }
-   
-},
-resetPassword: async(req,res)=>{
-  try{
-    console.log("hwlwlwlwlwlwlwlw")
-    
-
-    const { id, token } = req.params;
-    const { password } = req.body;
-
-    console.log(id)
-    console.log(token)
-    const user = await Users.findOne({ _id: id });
-    if (!user) {
-      return res.status(500).json({ err: "Not verified" });
-  }
-  }catch (error) {
-    console.log("eoeoeoeoeoeoeoeo")
-     
-    return res.status(500).json({ err: "Reset password failed" });
-}
-},
-getUser: (req, res) => {
-console.log("00000000000000000000000000000000000000000000000000000000000000000000000000")
-try{
-  
-  const {id} =req.params
-  Users.find({id}).then((response) => {
-    console.log("poooooooooooooooooooooooooooooooooooooooooooooo", response);
-    res.status(200).json({ alluser: response });
-  });
-}
-catch(error)
-{
-  console.log(error)
-}
-
-
-
-},
-
-
-  checkoutPayment: async (req, res) => {
-    console.log("at checkout");
-
-    try
-      {
-          const line_items=req.body
-
-          const usdToInrRate=100;
-          const usdAmount=line_items?.price;
-          const inrAmount =usdAmount * usdToInrRate 
-
-    console.log("at try");
-
-
-          const customer = await stripe.customers.create({
-            metadata: {
-                userId: line_items.userId,
-                appointments: JSON.stringify(line_items)
-
-            }
-        })
-
-        const session = await stripe.checkout.sessions.create({
-          line_items: [
-            //till now rray cart items
-            {
-              price_data: {
-                currency: "inr",
-                product_data: {
-                  name: line_items?.doctor,
-                  images: [line_items?.doctorImage],
-                  description: line_items?.name,
-                  metadata: {
-                      id: line_items?.doctorId
-                  }
-                },
-                unit_amount: inrAmount,
-              },
-              quantity: 1,
-            },
-          ],
-          
-          customer: customer.id,
-          mode: "payment",   
-          success_url: `${process.env.CLIENT_URL}/success`,
-          cancel_url: `${process.env.CLIENT_URL}/failure`,
-        });
-        res.send({ url: session.url });
-
-
-
-      }catch(error){ 
-        console.log("error",error);
-        res.status(500).json(error)
-      } 
-   
-  },
-
-// Use this sample code to handle webhook events in your integration.
-
-
-// This is your Stripe CLI webhook secret for testing your endpoint locally.
-// whsec_26bfada796f5ae6ea48ffc9325cd5c07dd4ef084893a5b2b6285327d16f011fc
-
-webhook:async (req, res) => {
-  let endpointSecret = "whsec_26bfada796f5ae6ea48ffc9325cd5c07dd4ef084893a5b2b6285327d16f011fc";
-  const sig = req.headers['stripe-signature'];
-
-let data;
-let eventType;
-
-  if(endpointSecret){
-    console.log("at webhookkkkkkkkkkkkkkkkkkk")
-    const payload=req.body;
-    const payloadString =JSON.stringify(payload,null,2)
-    const header =stripe.webhooks.generateTestHeaderString({
-      payload:payloadString,
-      secret:endpointSecret
-    })
-    let event;
-
-    try {
-    console.log("at webhookkkkk tryyyyyyyyyyy")
-
-      event = stripe.webhooks.constructEvent(payloadString, header, endpointSecret);
-      console.log("Webhook verifieddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd")
-    
-    } catch (err) {
-      console.log(`Webhook Errorrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr: ${err.message}`)
-      res.status(400).send(`Webhook Error: ${err.message}`);
-      return;
-    }
-    data=event.data.object;
-    eventType=event.type
-  }
-  else{
-    console.log("at webhookkkkk else")
-
-      data=req.body.data.object;
-      eventType=req.body.type
-  }
-  // Handle the event
-  console.log("Handle the event")
-
-    if(eventType ==="checkout.session.completed") 
-    {
-      stripe.customers.retrieve(data.customer).then(
-        (customer)=>{
-
-          console.log("customer",customer);
-
-          const appointmentsData=JSON.parse(customer.metadata.appointments)
-
-          const newAppointment =new Appointment({
-
-            userId:customer?.metadata?.userId,
-            doctorId:appointmentsData?.doctorId,
-            doctorName:appointmentsData?.doctor,
-            doctorImage:appointmentsData?.doctorImage ,
-            department:appointmentsData?.doctorsDepartment ,
-            date :appointmentsData?.date ,
-            time:appointmentsData?.time ,
-            price:appointmentsData?.price ,
-            payment_status: data?.payment_status ,
-            paymentOwner:data?.customer_details?.email ,
-          })
-
-          newAppointment.save();
-          console.log("newAppointment")
-
-          console.log(customer)
-          console.log("data",data)
-
-        }
-      ).catch(err=>{
-        console.log(err.message);
-      })
-    }
-
-  // Return a 200 res to acknowledge receipt of the event
-  res.send().end;
-},
-forgotPassword:async(req,res)=>{
-   const {email} =req.body
-  console.log("forepdokkkkkkkkkkkk")
-  console.log(req.body)
-
-   try{
-    console.log("is here")
-     let user=await Users.findOne({email})
-    if(!user)
-    {
-      return res.status(500).json({ err: "No user exists with this email" });
-
-    }
-    const userObject = user.toObject(); 
-    const secret =user.password +process.env.KEY
-    console.log("user._id",user._id)
-    
-    // const token =jwt.sign({email:user.email,id:user._id},secret,{
-      //   // expiresIn:"30m"
-      // })
-      const token =await String(
-      jwt.sign({email:userObject.email,id:userObject._id
-      },secret
-      // {
-      //  expiresIn:"30m"
-      //    }
-      )
-      );
-
-      // console.log("token",token)
-let newtoken = token.replace(/\./g, "$");
-      console.log("token",newtoken)
-      console.log("user._id",user._id)
-
-// console.log("newtoken",newtoken) /activate-account/:userid/:token
-  // const link =`<a href="${process.env.CLIENT_URL}/reset-password/${user._id}/${newtoken}">Click to reset password </a>`;
-  const link =`<a href="${process.env.CLIENT_URL}/foractivate-account/${user._id}/${newtoken}">Click to reset password </a>`;
-  
-  let testAccount = await nodemailer.createTestAccount();
-
-  let transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true, // true for 465, false for other ports
-    auth: {
-      user: process.env.EMAIL, // generated ethereal user
-      pass: process.env.EMAIL_TEST_APP_PSWD, // generated ethereal password
-    },
-  });
-
-  // send mail with defined transport object
- 
-  let info = await transporter.sendMail({
-    from: process.env.EMAIL, // sender address
-    to: email, // list of receivers
-    subject: "Reset Password", // Subject line
-    // text: "Hello world?", // plain text body
-    html: link, // html body
-  });
-
-
-
-
-}
-   catch(error)
-   {
-    console.log("is here error" )
-    console.log(error )
-
-    res.status(500).json({error:"Somthing Error"})
-
-   }
-   
-},
-resetPassword: async(req,res)=>{
-  try{
-    console.log("hwlwlwlwlwlwlwlw")
-    
-
-    const { id, token } = req.params;
-    const { password } = req.body;
-
-    console.log(id)
-    console.log(token)
-    const user = await Users.findOne({ _id: id });
-    if (!user) {
-      return res.status(500).json({ err: "Not verified" });
-  }
-  }catch (error) {
-    console.log("eoeoeoeoeoeoeoeo")
-     
-    return res.status(500).json({ err: "Reset password failed" });
-}
-},
-getUser: (req, res) => {
-console.log("00000000000000000000000000000000000000000000000000000000000000000000000000")
-try{
-  
-  const {id} =req.params
-  Users.find({id}).then((response) => {
-    console.log("poooooooooooooooooooooooooooooooooooooooooooooo", response);
-    res.status(200).json({ alluser: response });
-  });
-}
-catch(error)
-{
-  console.log(error)
-}
-
-
-
-},
-
-
-
 
 
 

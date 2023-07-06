@@ -1,6 +1,8 @@
 const express=require("express")
 const cors=require("cors")
 const bodyParser=require("body-parser")
+const morgan = require('morgan');
+
 require("dotenv")
 
 const connect=require("./src/connection/db")
@@ -13,6 +15,7 @@ const doctorRoutes=require("./src/routes/doctorRoute")
 const conversation=require("./src/routes/conversation")
 const message=require("./src/routes/messages")
 const app=express()
+app.use(morgan('common'))
 
 app.use(cors({
     origin:["http://localhost:5173"],

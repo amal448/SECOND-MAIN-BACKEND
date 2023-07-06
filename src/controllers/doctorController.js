@@ -9,6 +9,7 @@ const Users=require("../model/User")
 const Applications=require("../model/Doctorapply")
 const { EMAILREGEX, checkPasswordHasSpecialCharacters, stringHasAnyNumber} = require("../utils/constants");
 const Appointments = require("../model/appointment");
+const { default: mongoose } = require("mongoose");
 
 
 
@@ -192,8 +193,15 @@ module.exports={
             {
                 const timeSlot=[]
                 let currentTime=moment(startTime,'h:mm A');
+            
 
                 while(currentTime < moment(endTime,'h:mm A')){
+
+                    console.log("currentTime..........",currentTime)
+                    console.log("endTime.......",endTime)
+                    console.log("startTime......",startTime)
+
+
                     timeSlot.push(currentTime.format('h:mm A'));
                     currentTime.add(interval,'minutes')
                 }
@@ -240,7 +248,7 @@ module.exports={
         try{ 
 
             let doctorId=req.doctor
-            console.log(doctorId)
+            console.log("doctorId",doctorId)
     
     let userIds=await Appointments.distinct("userId",{doctorId})  
     console.log("userIds is here in appointment", userIds) 
@@ -254,17 +262,37 @@ module.exports={
             res.status(500).send("Unable to fetch user data")
         }
     
-    
-    
-    
     },
+    getAppointments:async(req,res)=>{
+    
+        try
+        {
+            let doctorId=req.doctor
+
+            let Appointmentdata=await Appointments.find({doctorId}).populate({
+                path:'userId',
+                select:['-password','-tokens']
+            }).select(" doctorId doctorName payment_status department date time price paymentOwner paymentOwnerEmail createdAt updatedAt __v")
+          console.log(Appointmentdata)
+            res.send(Appointmentdata)
+        }
+        catch(error) {
+            res.send("can't find appointments")
+        
+
+        }
+
+
+
+    },
+    
     getDoctor: (req, res) => {
         console.log("00000000000000000000000000000000000000000000000000000000000000000000000000")
         try{
           
-          const {id} =req.params
-          console.log(id)
-          Doctors.find({ _id: id }).then((response) => {
+          const {doctorId} =req.params
+          console.log(doctorId)
+          Doctors.find({ _id: doctorId }).then((response) => {
             console.log("poooooooooooooooooooooooooooooooooooooooooooooo", response);
             res.status(200).json({ doctor: response });
           });
@@ -274,5 +302,29 @@ module.exports={
           console.log(error)
         }
    
+},
+getFullPayment:async(req,res)=>{
+const {id}=req.params
+try{
+    const payment =await Appointments.aggregate([
+        {
+            $match :{
+                doctorId: new mongoose.Types.ObjectId(id)
+            }
+        },
+        {
+            $group:{
+                _id:null,
+                total: {$sum: "$price"}
+            }
+        }
+    ])
+    res.status(200).json(payment);
+
+}catch (error) {
+       
+    return res.status(500).json({ err: "can't access data" })
+
+}
 }
 }
