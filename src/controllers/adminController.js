@@ -4,6 +4,7 @@ const Doctors = require("../model/Doctor");
 const Users = require("../model/User");
 const Departments = require("../model/Department.js");
 const Applicant = require("../model/Doctorapply.js");
+const moment=require("moment")
 const nodemailer = require("nodemailer");
 const {
   checkPasswordHasSpecialCharacters,
@@ -45,9 +46,9 @@ module.exports = {
     }
   },
 
-  addDoctor: (req, res) => {
+  addDoctor: async (req, res) => {
     console.log("backcall...................");
-    return new Promise((resolve, reject) => {
+    try {
       const errMessage = {
         firstName: "",
         lastName: "",
@@ -58,9 +59,11 @@ module.exports = {
         address: "",
         department: "",
         password: "",
-        CTC: "",
+        fees: "",
         about: "",
         experience: "",
+        startTime:"",
+        endTime:""
       };
       const {
         firstName,
@@ -72,13 +75,36 @@ module.exports = {
         address,
         image,
         password,
-        CTC,
+        fees,
         about,
         experience,
+        startTime,
+        endTime
       } = req.body;
       console.log(1);
       console.log(req.body);
-
+  
+      const formattedStartedTime= moment(startTime,"hh:mmA").format("H")
+      const formattedEndTime=moment(endTime,"hh:mmA").format("H");
+  
+      console.log("LLLLLLLLLLLLLLLLLLL")
+      console.log(formattedStartedTime);
+      console.log(formattedEndTime);
+  
+      function getTimesBetween(start,end){
+        const times=[]
+        let currentTime =moment(start);
+  
+        while(currentTime.isBefore(end)) {
+          times.push(currentTime.format("h:mm A"))
+          currentTime.add(1,'hour')
+        }
+  
+        return times;
+      }
+  
+      const timings= getTimesBetween(formattedStartedTime ,formattedEndTime)
+  
       if (
         firstName == "" ||
         lastName == "" ||
@@ -90,12 +116,12 @@ module.exports = {
         image == "" ||
         password == "" ||
         experience == "" ||
-        CTC == "" ||
+        fees == "" ||
         about == ""
       ) {
         for (const key in req.body) {
           if (req.body[key] == "") {
-            errMessage = { ...errMessage, [key]: "please provide" + key };
+            errMessage[key] = "please provide" + key;
           } else {
             delete errMessage[key];
           }
@@ -104,44 +130,37 @@ module.exports = {
         return res.status(406).json({ ...errMessage, ok: false });
       } else {
         console.log(1);
-
+  
         // if (!EMAILREGEX.test(email)) {
         //   return res.status(406).json({ email: "invalid email " });
         // }
-
+  
         // if (!stringHasAnyNumber(mobile)) {
         //   return res.status(406).json({ mobile: "invalid mobile " });
         // }
         console.log(2);
-        try {
-          Doctors.findOne({ email: email }).then((response) => {
-            if (response) {
-              return res.status(409).json({ email: "username already exist" });
-            } else {
-              console.log("1doctorcheck");
-              // console.log("res.body", response);
-
-              req.body.password = passwordHash.generate(password);
-
-<<<<<<< HEAD
-              new Doctors({ ...req.body, block: false,timings,status:"Approved"})
-=======
-              new Doctors({ ...req.body, block: false })
->>>>>>> parent of fe58e5b (payment started)
-                .save()
-                .then(async (response) => {
-                  return res
-                    .status(200)
-                    .json({ response, message: "Added to the mongoDataBase" });
-                });
-            }
-          });
-        } catch (error) {
-          res.status(500).json({ err: "Something wrong here" });
+  
+        const response = await Doctors.findOne({ email: email });
+        if (response) {
+          return res.status(409).json({ email: "username already exists" });
+        } else {
+          console.log("1doctorcheck");
+          // console.log("res.body", response);
+  
+          req.body.password = passwordHash.generate(password);
+  
+          await new Doctors({ ...req.body, block: false, timings, status: "Approved" }).save();
+  
+          return res
+            .status(200)
+            .json({ response, message: "Added to the mongoDataBase" });
         }
       }
-    });
+    } catch (error) {
+      return res.status(500).json({ err: "Something went wrong" });
+    }
   },
+  
   // Get All Doctor
   getallDoctors: (req, res) => {
     Doctors.find({}).then((response) => {
