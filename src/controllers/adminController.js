@@ -84,8 +84,8 @@ module.exports = {
       console.log(1);
       console.log(req.body);
   
-      const formattedStartedTime= moment(startTime,"hh:mmA").format("H")
-      const formattedEndTime=moment(endTime,"hh:mmA").format("H");
+      const formattedStartedTime= moment(startTime,"hh:mmA")
+      const formattedEndTime=moment(endTime,"hh:mmA")
   
       console.log("LLLLLLLLLLLLLLLLLLL")
       console.log(formattedStartedTime);
@@ -104,7 +104,7 @@ module.exports = {
       }
   
       const timings= getTimesBetween(formattedStartedTime ,formattedEndTime)
-  
+      console.log("Timingsssssssssssssssssssssssssssss",timings)
       if (
         firstName == "" ||
         lastName == "" ||

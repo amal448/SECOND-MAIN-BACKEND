@@ -1,4 +1,5 @@
 const mongoose=require("mongoose")
+const mongoosePaginate=require("mongoose-paginate")
 
 const Doctor=new mongoose.Schema({
     firstName:String,
@@ -12,14 +13,16 @@ const Doctor=new mongoose.Schema({
     department:String,
     experience:String,
     CTC:Number,
-    startTime:Number,
-    endTime:Number,
+    startTime:String,
+    endTime:String,
     timings:Array,
     fees:Number,
     password:String,
     block:Boolean,
-    status:String
+    status:String,
+    doctorTimings:Object
 })
+Doctor.plugin(mongoosePaginate)
 
 const Doctors=mongoose.model("doctors",Doctor)
 module.exports=Doctors 

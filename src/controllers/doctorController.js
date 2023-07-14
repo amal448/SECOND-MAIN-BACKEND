@@ -27,11 +27,11 @@ module.exports={
 
         console.log("Amaldihufhufi");
         let errorMessages={
-            firstName:"",lastName:"",email:"",mobile:"",dob:"",image:"",about:"", address:"",department:"",experience:"",CTC:"",certificate:"",fees:"",startTime:"",endtime:""
+            firstName:"",lastName:"",email:"",mobile:"",dob:"",image:"",about:"", address:"",department:"",experience:"",CTC:"",certificate:"",fees:"",startTime:"",endtime:"",password:""
         }
     
 
-            const {firstName,lastName,email,mobile,department,dob,address,about,experience,image,certificate,CTC,startTime,endTime,fees}=req.body
+            const {firstName,lastName,email,mobile,department,dob,address,about,experience,image,certificate,CTC,startTime,endTime,fees,password}=req.body
             console.log(req.body);
         const formattedStartedTime= moment(startTime,"hh:mmA")
         const formattedEndTime=moment(endTime,"hh:mmA")
@@ -60,7 +60,7 @@ module.exports={
 
 
 
-            if(firstName==""||lastName==""||email==""||mobile==""|| department==""||dob=="" ||address==""||image==""||about==""||experience==""||certificate=="" ||CTC=="")
+            if(firstName==""||lastName==""||email==""||mobile==""|| department==""||dob=="" ||address==""||image==""||about==""||experience==""||certificate=="" ||fees=="")
             {
                 for(const key in req.body)
                 {
@@ -110,7 +110,12 @@ module.exports={
                         }
                         else{
                             console.log("res.body",response)
-                            new Doctors({...req.body,block:true,timings,status:"pending", doctorTimings:timeSlots }).save().then(async (response)=>{
+                            // new Doctors({...req.body,block:true,timings,status:"pending", doctorTimings:timeSlots }).save().then(async (response)=>{
+    
+                            //     return res.status(200).json({message:"Approval is pending"})
+                            // })
+                             req.body.password = passwordHash.generate(password);
+                            new Doctors({...req.body,block:true,timings,status:"pending" }).save().then(async (response)=>{
     
                                 return res.status(200).json({message:"Approval is pending"})
                             })
@@ -178,7 +183,7 @@ module.exports={
     },
   
     addDoctorTimeSlot:async (req,res) =>{
-
+       
         console.log("kerrrrrriiiii");
         const doctorId = req.doctor;
         console.log(doctorId);
@@ -198,8 +203,8 @@ module.exports={
                 while(currentTime < moment(endTime,'h:mm A')){
 
                     console.log("currentTime..........",currentTime)
-                    console.log("endTime.......",endTime)
                     console.log("startTime......",startTime)
+                    console.log("endTime.......",endTime)
 
 
                     timeSlot.push(currentTime.format('h:mm A'));
@@ -213,7 +218,7 @@ module.exports={
             function generateDoctorTimings(existingTimings,updatedTimings,interval)
             {
                 const doctorTimings={...existingTimings};
-
+                console.log("doctorTimings...............",doctorTimings)
                 for(const timing of updatedTimings)
                 {
                     const {day,startTime,endTime} =timing;
@@ -221,6 +226,8 @@ module.exports={
                     if(startTime && endTime)
                     {
                         const timeSlots=generateTimeSlots(startTime,endTime,interval);
+                      console.log("timeSlots122121212121212",timeSlots)
+                      console.log("dayyyyyyyyyyyyy",day)
                         doctorTimings[day]=timeSlots
                     }
 
@@ -230,7 +237,9 @@ module.exports={
             }
             const existingDoctor=await Doctors.findById(doctorId)
             const doctorTimings =generateDoctorTimings(existingDoctor.doctorTimings,timings,interval)
+            console.log("doctorTimings lasttttttttttttttt",doctorTimings)
             const updateTime =await Doctors.findByIdAndUpdate(doctorId,{doctorTimings})
+            console.log("updateTimeeeeeeeeeeeeeeeeee",updateTime)
       
         res.status(200).json(updateTime);
             
@@ -269,11 +278,11 @@ module.exports={
         {
             let doctorId=req.doctor
 
-            let Appointmentdata=await Appointments.find({doctorId}).populate({
+            let Appointmentdata=await Appointments.find({doctorId}).sort({ createdAt: -1 }).populate({
                 path:'userId',
                 select:['-password','-tokens']
             }).select(" doctorId doctorName payment_status department date time price paymentOwner paymentOwnerEmail createdAt updatedAt __v")
-          console.log(Appointmentdata)
+          console.log("Appointmentdata of respected doctor",Appointmentdata)
             res.send(Appointmentdata)
         }
         catch(error) {
@@ -304,12 +313,12 @@ module.exports={
    
 },
 getFullPayment:async(req,res)=>{
-const {id}=req.params
+const {doctorId}=req.params
 try{
     const payment =await Appointments.aggregate([
         {
             $match :{
-                doctorId: new mongoose.Types.ObjectId(id)
+                doctorId: new mongoose.Types.ObjectId(doctorId)
             }
         },
         {
@@ -319,12 +328,191 @@ try{
             }
         }
     ])
+    console.log("PAYMENTTTTTTTTTTT",payment)
     res.status(200).json(payment);
 
 }catch (error) {
-       
+       console.log(error)
     return res.status(500).json({ err: "can't access data" })
 
 }
+},
+monthlyReport:async(req,res)=>{
+    try{
+        console.log("montlyuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu")
+        const {doctorId} =req.params
+        console.log("doctorId",doctorId)
+        const result =await Appointments.aggregate([
+            {
+                $match :{
+                    doctorId:new mongoose.Types.ObjectId(doctorId)
+                }
+            },
+            {
+                $group :{
+                    _id:{
+                        $month:"$date"
+                    },
+                    totalAmount: {
+                        $sum: "$price"
+                    }
+                }
+            },
+            {
+                $project :{
+                    _id:0,
+                    month:"$_id",
+                    totalAmount:1
+                }
+            },
+            {
+                $group:{
+                    _id:null,
+                    data:{
+                        $push:{
+                            month:"$month",
+                            totalAmount:"$totalAmount"
+                        }
+                    }
+                }
+            },
+            {
+                $unwind :{
+                    path:"$data",
+                    includeArrayIndex:"index",
+                    preserveNullAndEmptyArrays:true
+                }
+            },
+            {
+                $group:{
+                    _id:"$data.month",
+                    totalAmount:{
+                        $max:"$data.totalAmount"
+                    }
+                }
+            },
+            {
+                $sort:{
+                    _id:1
+                }
+            },
+            {
+                $project:{
+                    _id:0,
+                    month:"$_id",
+                    totalAmount:{
+                        $ifNull: ["$totalAmount",0]
+                    }
+                }
+            }
+        ])
+
+        
+        const months = Array.from(Array(12), (_, i) => i + 1); // Generate an array of months (1 to 12)
+       
+        const prices = months.map(month => {
+            const resultItem = result.find(item => item.month === month);
+            return resultItem ? resultItem.totalAmount : 0;
+        });
+        console.log("priceeeeee monthhhhhhhhhhhh",prices)
+        res.status(200).send(prices);
+    } catch (error) {
+    
+        res.status(400).json({ error: "Unable to retrieve the data" });
+    }
+},
+weeklyReport:async(req,res)=>{
+    try {
+        console.log("weeklyuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu")
+
+        const doctorId = req.doctor;
+
+        const result = await Appointments.aggregate([
+            {
+                $match: {
+                    doctorId: new mongoose.Types.ObjectId(doctorId)
+                }
+            },
+            {
+                $group: {
+                    _id: { $dayOfWeek: "$createdAt" },
+                    totalSales: { $sum: "$price" }
+                }
+            },
+            {
+                $sort: { _id: 1 }
+            }
+        ])
+
+        const salesByDay = Array.from({ length: 7 }, (_, index) => {
+            const dayData = result.find(data => data._id === index + 1);
+            return dayData ? dayData.totalSales : 0
+        });
+        console.log("salesByDay....",salesByDay)
+       
+        res.status(201).json(salesByDay)
+    } catch (error) {
+      
+        res.status(500).json({ err: "can't create data" })
+
+    }
+},
+dailyReport:async(req,res)=>{
+    try {
+        const doctorId = req.doctor;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const result = await Appointment.aggregate([
+          {
+            $match: {
+              date: { $gte: today },
+              doctorId: new mongoose.Types.ObjectId(doctorId),
+            },
+          },
+          {
+            $group: {
+              _id: null,
+              total: { $sum: "$price" },
+            },
+          },
+        ]);
+    
+        const dailyTotal = result.length > 0 ? result[0].total : 0;
+        console.log("dailyTotal....",dailyTotal)
+        res.status(201).json(dailyTotal);
+      } catch (error) {
+      
+        res.status(400).json({ err: "Can't find the data" });
+      }  
+},
+getYearlyReport:async(req,res)=>{
+    const doctorId = req.doctor;
+    console.log("yearly report///////")
+    try {
+        const result = await Appointments.aggregate([
+            {
+                $match: {
+                    doctorId: new mongoose.Types.ObjectId(doctorId)
+                }
+            },
+            {
+                $group: {
+                    _id: { $year: "$createAt" },
+                    totalSales: { $sum: "$price" }
+                }
+            },
+            {
+                $sort: { _id: 1 }
+            }
+        ])
+
+        const yearlyReport = result.map(yearData => yearData.totalSales);
+        console.log("yearlyReporttttttttttttt",yearlyReport)
+        res.status(201).json(yearlyReport)
+
+    } catch (error) {
+        res.status(400).json({ err: "can't update the data" })
+
+    }
 }
 }
