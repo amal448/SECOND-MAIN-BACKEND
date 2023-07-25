@@ -19,7 +19,7 @@ const app=express()
 app.use(morgan('common'))
 
 app.use(cors({
-    origin:["http://localhost:5173"],
+    origin:["http://localhost:5173","https://celadon-blancmange-e713f5.netlify.app"],
     methods:["GET","POST","PUT","DELETE","PATCH"],
     credentials:true
 }))
