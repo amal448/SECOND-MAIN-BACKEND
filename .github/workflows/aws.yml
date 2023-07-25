@@ -1,0 +1,26 @@
+name: Deploy backend to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Generate SSH key
+        run: |
+          echo "${{ secrets.PRIVATE_KEY }}" > ~/secret.pem
+          chmod 600 ~/secret.pem
+
+      - name: SSH into EC2 instance and restarting server
+        run: |
+          ssh -i "~/secret.pem" ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} '
+          cd ~/project/SECOND-MAIN-BACKEND
+          git pull
+          pm2 restart server-backend
+          '
