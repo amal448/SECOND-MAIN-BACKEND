@@ -19,7 +19,7 @@ jobs:
 
       - name: SSH into EC2 instance and restarting server
         run: |
-          ssh -i "~/secret.pem" ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} '
+          ssh -o StrictHostKeyChecking=accept-new -i "~/secret.pem" ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} '
           cd ~/project/SECOND-MAIN-BACKEND
           git pull
           pm2 restart server-backend
