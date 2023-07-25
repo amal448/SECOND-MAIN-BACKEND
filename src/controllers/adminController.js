@@ -6,6 +6,8 @@ const Departments = require("../model/Department.js");
 const Applicant = require("../model/Doctorapply.js");
 const moment=require("moment")
 const nodemailer = require("nodemailer");
+const Appointment = require("../model/appointment");
+
 const {
   checkPasswordHasSpecialCharacters,
   EMAILREGEX,
@@ -214,18 +216,38 @@ module.exports = {
     try{
 
       const {id} =req.params
+      console.log("id",id)
 
         const updatedepartment=await Departments.findById(id)
-        re.json.status(200).json({response:updatedepartment})
+        res.status(200).json({response:updatedepartment})
       
     }
     catch(error)
     {
-      res.status(500).json({ err: "can't edit department" });
+      res.status(400).json({ err: "can't edit department" });
 
     }
   },
+  updateDepartment:async(req,res)=>{
+   let department= req.body
+    console.log("updated department")
+    console.log("department department",department)
 
+    try{
+
+      const {id} =req.params
+      console.log("id",id)
+
+        const updatedepartment=await Departments.findByIdAndUpdate(id,department)
+        res.status(200).json({response:updatedepartment})
+      
+    }
+    catch(error)
+    {
+      res.status(400).json({ err: "can't edit department" });
+
+    }
+  },
   blockUser: async (req, res) => {
     await Users.updateOne({ _id: new ObjectId(req.params.id) }, [
       {
@@ -456,8 +478,7 @@ module.exports = {
       console.log(id);
       const approveDoctor = await Doctors.findByIdAndUpdate(
         { _id: id },
-        { block: false },
-        {status:"Approved"}
+        { block: false,status:"Approved" },
       );
 
       if (approveDoctor) {
@@ -565,4 +586,146 @@ module.exports = {
       res.status(500).json({ err: "can't delete the doctor" });
     }
   },
+  getWeeklyReport:(async (req,res)=>{
+    try {
+
+      const result = await Appointment.aggregate([
+          {
+              $group: {
+                  _id: { $dayOfWeek: "$createdAt" },
+                  totalSales: { $sum: "$price" }
+              }
+          },
+          {
+              $sort: { _id: 1 }
+          }
+      ])
+
+      const salesByDay = Array.from({ length: 7 }, (_, index) => {
+          const dayData = result.find(data => data._id === index + 1);
+          return dayData ? dayData.totalSales : 0
+      });
+      console.log("salesssalesByDaysalesByDaysalesByDay",salesByDay)
+     
+      res.status(201).json(salesByDay)
+  } catch (error) {
+     
+      res.status(500).json({ err: "can't create data" })
+
+  }
+  }),
+  getDailyReport:(async(req,res)=>{
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const result = await Appointment.aggregate([
+          {
+              $match: {
+                  date: { $gte: today }
+              }
+          },
+          {
+              $group: {
+                  _id: null,
+                  prices: { $push: "$price" }
+              }
+          }
+      ])
+
+      const dailyPrices = result.length > 0 ? result[0].prices : 0;
+    
+      res.status(201).json(dailyPrices)
+
+  } catch (error) {
+      res.status(500).json({ err: "can't find the data" })
+
+  }
+  }),
+  getYearlyReport:(async(req,res)=>{
+    try {
+      const result = await Appointment.aggregate([
+          {
+              $group: {
+                  _id: { $year: "$createAt" },
+                  totalSales: { $sum: "$price" }
+              }
+          },
+          {
+              $sort: { _id: 1 }
+          }
+      ])
+
+      const yearlyReport = result.map(yearData => yearData.totalSales);
+      res.status(201).json(yearlyReport)
+
+  } catch (error) {
+      res.status(500).json({ err: "can't update the data" })
+
+  }
+  }),
+  getAllDataCount:(async (req, res) => {
+    try {
+        const patients = await Users.find({});
+        const doctors = await Doctors.find({ status: 'approved' });
+        const appointments = await Appointment.find();
+        const price = await Appointment.aggregate([
+            {
+                $group: {
+                    _id: null,
+                    totalPrice: { $sum: "$price" }
+                }
+            }
+        ])
+        console.log(patients?.length, doctors?.length,appointments?.length)
+        res.status(201).json({ patients: patients?.length, doctors: doctors?.length, appointments: appointments?.length, Transaction: price[0]?.totalPrice });
+
+
+    } catch (error) {
+        res.status(500).json({ err: "can't get the patients" });
+    }
+}),
+
+getSalesForChart:(async (req, res) => {
+  try {
+      const result = await Appointment.aggregate([
+          {
+              $group: {
+                  _id: { $month: '$date' },
+                  Total: { $sum: '$price' },
+              },
+          },
+          {
+              $project: {
+                  _id: 0,
+                  name: {
+                      $switch: {
+                          branches: [
+                              { case: { $eq: ['$_id', 1] }, then: 'January' },
+                              { case: { $eq: ['$_id', 2] }, then: 'February' },
+                              { case: { $eq: ['$_id', 3] }, then: 'March' },
+                              { case: { $eq: ['$_id', 4] }, then: 'April' },
+                              { case: { $eq: ['$_id', 5] }, then: 'May' },
+                              { case: { $eq: ['$_id', 6] }, then: 'June' },
+                              { case: { $eq: ['$_id', 7] }, then: 'July' },
+                              { case: { $eq: ['$_id', 8] }, then: 'Auguest' },
+                              { case: { $eq: ['$_id', 9] }, then: 'September' },
+                              { case: { $eq: ['$_id', 10] }, then: 'October' },
+                              { case: { $eq: ['$_id', 11] }, then: 'November' },
+                              { case: { $eq: ['$_id', 12] }, then: 'December' },
+
+                          ],
+                          default: 'Unknown',
+                      },
+                  },
+                  Total: 1,
+              },
+          },
+      ]);
+      res.status(200).json(result)
+  } catch (error) {
+      res.status(500).json({ err: "can't update the data" })
+
+  }
+})
+
 };

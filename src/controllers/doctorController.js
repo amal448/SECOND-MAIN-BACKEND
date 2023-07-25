@@ -10,7 +10,8 @@ const Applications=require("../model/Doctorapply")
 const { EMAILREGEX, checkPasswordHasSpecialCharacters, stringHasAnyNumber} = require("../utils/constants");
 const Appointments = require("../model/appointment");
 const { default: mongoose } = require("mongoose");
-
+const prescription=require("../model/Prescription");
+const Prescription = require("../model/Prescription");
 
 
 
@@ -295,7 +296,7 @@ module.exports={
 
     },
     
-    getDoctor: (req, res) => {
+    getDoctor:async (req, res) => {
         console.log("00000000000000000000000000000000000000000000000000000000000000000000000000")
         try{
           
@@ -304,6 +305,8 @@ module.exports={
           Doctors.find({ _id: doctorId }).then((response) => {
             console.log("poooooooooooooooooooooooooooooooooooooooooooooo", response);
             res.status(200).json({ doctor: response });
+          }).catch((err)=>{
+            console.log(err)
           });
         }
         catch(error)
@@ -318,7 +321,7 @@ try{
     const payment =await Appointments.aggregate([
         {
             $match :{
-                doctorId: new mongoose.Types.ObjectId(doctorId)
+                doctorId: (doctorId)
             }
         },
         {
@@ -345,7 +348,7 @@ monthlyReport:async(req,res)=>{
         const result =await Appointments.aggregate([
             {
                 $match :{
-                    doctorId:new mongoose.Types.ObjectId(doctorId)
+                    doctorId:(doctorId)
                 }
             },
             {
@@ -430,7 +433,7 @@ weeklyReport:async(req,res)=>{
         const result = await Appointments.aggregate([
             {
                 $match: {
-                    doctorId: new mongoose.Types.ObjectId(doctorId)
+                    doctorId: (doctorId)
                 }
             },
             {
@@ -466,7 +469,7 @@ dailyReport:async(req,res)=>{
           {
             $match: {
               date: { $gte: today },
-              doctorId: new mongoose.Types.ObjectId(doctorId),
+              doctorId: (doctorId),
             },
           },
           {
@@ -492,7 +495,7 @@ getYearlyReport:async(req,res)=>{
         const result = await Appointments.aggregate([
             {
                 $match: {
-                    doctorId: new mongoose.Types.ObjectId(doctorId)
+                    doctorId: (doctorId)
                 }
             },
             {
@@ -514,5 +517,101 @@ getYearlyReport:async(req,res)=>{
         res.status(400).json({ err: "can't update the data" })
 
     }
-}
+},
+prescriptions :async(req,res)=>{
+    console.log("entered");
+    const {userId}=req.params
+    const doctorId = req.doctor;
+    const docId = doctorId.toString();
+
+    try {
+
+
+        const newPrescription = await prescription.find({
+            doctorId: docId,
+            userId: (userId),
+        });
+    console.log("newPrescription",newPrescription);
+
+        res.status(200).json(newPrescription);
+
+    } catch (error) {
+       
+        return res.status(401).json({ err: "can't create prescription" })
+    }
+},
+getUser: (req, res) => {
+    console.log(
+      "00000000000000000000000000000000000000000000000000000000000000000000000000"
+    );
+    try {
+      const { userId } = req.params;
+      console.log("id", userId);
+      Users.find({ _id: userId }).then((response) => {
+        console.log(
+          "poooooooooooooooooooooooooooooooooooooooooooooo",
+          response)
+          res.status(200).json({ alluser: response });
+        
+      }).catch((error)=>{
+        console.log(error)
+      })
+    } catch (error) {
+      console.log(error);
+    }
+  },
+  singleAppointment:async(req,res)=>{
+    console.log("mmmmmmmmmmmmmmmm");
+    try {
+        const { userId } = req.params;
+        const doctorId = req.doctor;
+    console.log("userId",userId);
+    console.log("doctorId",doctorId);
+       
+
+        const appointment = await Appointments.findOne({ userId: userId, doctorId:doctorId })
+     
+    console.log("appointment",appointment);
+
+        res.status(200).json(appointment)
+
+    } catch (error) {
+        res.status(404).json({ err: "can't access the appointment" })
+
+    }
+  },
+  addPrescription:async(req,res)=>{
+    console.log("addPrescriptionnnn",req.body);
+    try {
+        const { userId, doctorId, title, description, username, doctorname } = req.body;
+        const newPrescription = new prescription({
+            userId,
+            doctorId,
+            username,
+            doctorname,
+            title,
+            description
+        });
+        newPrescription.save();
+        res.status(201).json({ success: "data created successfully" })
+
+    } catch (error) {
+        res.status(500).json({ err: "data creation failure" })
+
+    }
+  },
+  deletePrescription:async(req,res)=>{
+    const {prescriptionId} =req.params
+    console.log("presIdpresId",prescriptionId)
+    if(prescriptionId)
+    {
+        Prescription.findByIdAndDelete(prescriptionId).then((response)=>{
+            res.status(200).json("deleted successfully")
+        }).catch((error)=>{
+            console.log("Something error is occured")
+        })
+    }
+
+
+  }
 }

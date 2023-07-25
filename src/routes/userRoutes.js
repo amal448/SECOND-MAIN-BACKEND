@@ -15,6 +15,9 @@ router.get('/get-departments',userAuth,userController.getDepartments)
 router.get('/activate-account/:token',userController.activetAccount)
 router.get('/experience-doctors',userController.departmentexpdoc)
 router.get('/department-doctors/:department/:page',userController.getdepartmentdoctors)
+// router.get('/department-doctors/:department',userController.getdepartmentdoctors)
+
+
 router.post('/doctor/checkAvailability',userController.checkAvailability)
 router.get('/get-doctor/id:',userController.getSingleDoctor)
 router.post('/create-checkout-session',userController.checkoutPayment)
@@ -25,4 +28,7 @@ router.get('/foractivate-account/:userid/:token',userController.activetidtoken)
 router.post('/razorpay',userController.RazorPayment)
 router.get('/user/:userId',userController.getUser)
 router.get('/bookinghistory/:userId',userAuth,userController.bookhistory)
+router.get('/update-appointment',userAuth,userController.updateAppointment)
+
+
 module.exports=router;

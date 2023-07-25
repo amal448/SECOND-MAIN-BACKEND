@@ -36,6 +36,7 @@ module.exports = {
       confirmPassword: "",
       image: "",
     };
+    
     let {
       firstName,
       lastName,
@@ -98,6 +99,21 @@ module.exports = {
         } else {
           req.body.password = passwordHash.generate(password);
 
+
+
+     
+
+
+
+
+
+
+
+
+
+
+
+
           delete req.body.confirmPassword;
           console.log("in try", req.body);
           new Users({ ...req.body, block: false, active: false })
@@ -142,6 +158,7 @@ module.exports = {
   login: (req, res) => {
     try {
       const { email, password } = req.body;
+      console.log( email, password)
       if (email == "" || password == "") {
         return res
           .status(406)
@@ -168,7 +185,7 @@ module.exports = {
       });
     } catch (error) {
       console.log(error);
-      return res.status(500).json({ message: error.message });
+      return res.status(400).json({ message: error.message });
     }
   },
   getAllDoctors: (req, res) => {
@@ -524,7 +541,6 @@ module.exports = {
         time,
         price,
         userName,
-        // userlastName,
         useremail,
       } = data;
 
@@ -665,10 +681,12 @@ module.exports = {
       Users.find({ _id: userId }).then((response) => {
         console.log(
           "poooooooooooooooooooooooooooooooooooooooooooooo",
-          response
-        );
-        res.status(200).json({ alluser: response });
-      });
+          response)
+          res.status(200).json({ alluser: response });
+        
+      }).catch((error)=>{
+        console.log(error)
+      })
     } catch (error) {
       console.log(error);
     }
@@ -685,4 +703,11 @@ module.exports = {
       console.log(error);
     }
   },
+  updateAppointment:async(req,res)=>{
+    // const approveDoctor = await Doctors.findByIdAndUpdate(
+    //   { _id: id },
+    //   { block: false },
+    //   {status:"Approved"}
+    // );
+  }
 };

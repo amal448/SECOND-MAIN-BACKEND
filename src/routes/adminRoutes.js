@@ -19,7 +19,14 @@ router.get('/view-doctor-request/:id',adminController.getApplicantData)
 router.patch('/approve-doctor/:id',adminController.doctorApproval)
 router.delete('/decline-doctor/:id',adminController.RejectApproval)
 // router.delete('/delete-dep/:id',adminController.deleteDepartment)
-router.put('/edit-dep/:id',adminController.editDepartment)
+router.get('/edit-dep/:id',adminController.editDepartment)
+router.post('/update-dep/:id',adminController.updateDepartment)
+
+router.get('/weeklySales',adminController.getWeeklyReport)
+router.get('/dailySales',adminController.getDailyReport)
+router.get('/yearlySales',adminController.getYearlyReport)
+router.get('/data-count',adminController.getAllDataCount)
+router.get('/sales-monthly',adminController.getSalesForChart)
 
 
 module.exports=router; 

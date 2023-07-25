@@ -17,6 +17,13 @@ router.get('/weekly-report',doctorAuth,doctorController.weeklyReport)
 router.get('/monthly-report',doctorController.monthlyReport);
 router.get('/daily-report',doctorAuth,doctorController.dailyReport);
 router.get('/yearly-report',doctorAuth,doctorController.getYearlyReport);
+router.get('/user/:userId',doctorAuth,doctorController.getUser)
+
+router.get('/prescriptions/:userId',doctorAuth,doctorController.prescriptions);
+router.get('/singleAppointment/:userId',doctorAuth,doctorController.singleAppointment)
+
+router.post('/addprescription',doctorAuth,doctorController.addPrescription)
+router.get('/deletePrescription/:prescriptionId',doctorAuth,doctorController.deletePrescription);
 
 
 module.exports=router;

@@ -3,6 +3,7 @@ const cors=require("cors")
 const bodyParser=require("body-parser")
 const morgan = require('morgan');
 
+const socket = require("socket.io");
 require("dotenv")
 
 const connect=require("./src/connection/db")
@@ -49,5 +50,75 @@ app.use("*",(err,req,res,next)=>{
     next(err)
 })
 
-const PORT = process.env.PORT || 5000
-app.listen(PORT,()=>console.log("server started ",PORT))
+// const PORT = process.env.PORT || 5000
+// app.listen(PORT,()=>console.log("server started ",PORT))
+
+
+const port = process.env.PORT || 5000;
+const server = app.listen(port, () => {
+  console.log(`Listening on socket  port ${port}...`);
+});
+
+const io = socket(server,{
+    cors:{
+      origin:["http://localhost:5173"],
+
+    }
+})
+
+
+
+let users=[];
+
+const addUser=(userId,socketId)=>{
+    !users.some(user=>user.userId ===userId) &&
+    users.push({userId,socketId})
+}
+
+io.on("connection",(socket)=>{
+    console.log("a user connected.")
+    // io.emit("welcome","hello this is socket server !")
+    socket.on("addUser",(userId)=>{
+        console.log("socket.id,",socket.id)
+        addUser(userId,socket.id)
+        io.emit("getUsers",users)
+    }) 
+
+        //sender
+    socket.on("sendMessage",({senderId,receiverId,text})=>{
+        console.log("senderId",senderId)
+        console.log("receiverId",receiverId)
+        console.log("text",text)
+
+        const user=getUser(receiverId)
+
+        if (user && user.socketId) {
+
+        io.to(user.socketId).emit("getMessage",{
+            senderId,
+            text,
+    
+        })
+    }
+    })
+//    disconnect 
+    socket.on("disconnect", ()=>{
+        console.log("a user disconnected")
+        removeUser(socket.id)
+    })
+})
+
+const getUser =(userId)=>{
+    console.log("userId",userId)
+    return users.find((user) =>user.userId ===userId) 
+}
+
+
+
+
+const removeUser=(socketId)=>{
+    users=users.filter((user)=>user.socketId !==socketId)
+}
+
+
+

@@ -11,8 +11,8 @@ const Appointment=new mongoose.Schema({
     price:Number,
     payment_status:String,
     paymentOwner:String,
-    paymentOwnerEmail:String
-    
+    paymentOwnerEmail:String,
+    status:String
     
 },
 { timestamps: true }
