@@ -8,7 +8,9 @@ const prescriptions=new mongoose.Schema({
     title:String,
     description:String,
 
-})
+},
+{timestamps:true}
+)
 
 const Prescription=mongoose.model("prescriptions",prescriptions)
 module.exports=Prescription 

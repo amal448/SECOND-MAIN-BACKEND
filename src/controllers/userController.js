@@ -7,6 +7,7 @@ const Users = require("../model/User");
 const Doctors = require("../model/Doctor");
 const Departments = require("../model/Department");
 const moment = require("moment");
+const mongoose = require("mongoose");
 
 const Stripe = require("stripe");
 require("dotenv").config();
@@ -19,6 +20,8 @@ const {
 } = require("../utils/constants");
 const { checkPassword } = require("../helpers/userHelper");
 const Appointments = require("../model/appointment");
+const Prescription = require("../model/Prescription");
+const { ObjectId } = require("mongodb");
 
 module.exports = {
   signup: (req, res) => {
@@ -36,7 +39,7 @@ module.exports = {
       confirmPassword: "",
       image: "",
     };
-    
+
     let {
       firstName,
       lastName,
@@ -90,7 +93,6 @@ module.exports = {
       return res.status(406).json({ mobile: "invalid mobile number" });
     }
 
-    console.log(req.body);
 
     try {
       Users.find({ email }).then((foundUsers) => {
@@ -98,21 +100,6 @@ module.exports = {
           return res.status(409).json({ email: "email already exist" });
         } else {
           req.body.password = passwordHash.generate(password);
-
-
-
-     
-
-
-
-
-
-
-
-
-
-
-
 
           delete req.body.confirmPassword;
           console.log("in try", req.body);
@@ -148,7 +135,9 @@ module.exports = {
                 html: `<b>click to the link for verification http://localhost:5173/activate-account/${newtoken}</b>`, // html body
               });
               res.status(200).json({ ok: true, message: "check your email" });
-            });
+            }).catch((error)=>{
+              console.log("error .catch",error)
+            })
         }
       });
     } catch (error) {
@@ -156,9 +145,13 @@ module.exports = {
     }
   },
   login: (req, res) => {
+    console.log("kkfkkdmmdmmlmlml");
     try {
       const { email, password } = req.body;
-      console.log( email, password)
+      console.log("email", email);
+      console.log("password", password);
+
+      console.log(email, password);
       if (email == "" || password == "") {
         return res
           .status(406)
@@ -544,8 +537,6 @@ module.exports = {
         useremail,
       } = data;
 
-     
-
       const newAppointment = new Appointment({
         userId: userId,
         doctorId: doctorId,
@@ -556,15 +547,13 @@ module.exports = {
         time: time,
         price: price,
         payment_status: "paid",
-        status:"pending",
+        status: "pending",
         paymentOwner: userName,
         paymentOwnerEmail: useremail,
       });
 
       newAppointment.save();
       console.log("newAppointment");
-
-    
 
       res.status(200).json({ message: "Appointment created successfully" });
     } catch (error) {
@@ -678,15 +667,17 @@ module.exports = {
     try {
       const { userId } = req.params;
       console.log("id", userId);
-      Users.find({ _id: userId }).then((response) => {
-        console.log(
-          "poooooooooooooooooooooooooooooooooooooooooooooo",
-          response)
+      Users.find({ _id: userId })
+        .then((response) => {
+          console.log(
+            "poooooooooooooooooooooooooooooooooooooooooooooo",
+            response
+          );
           res.status(200).json({ alluser: response });
-        
-      }).catch((error)=>{
-        console.log(error)
-      })
+        })
+        .catch((error) => {
+          console.log(error);
+        });
     } catch (error) {
       console.log(error);
     }
@@ -703,11 +694,63 @@ module.exports = {
       console.log(error);
     }
   },
-  updateAppointment:async(req,res)=>{
+  updateAppointment: async (req, res) => {
     // const approveDoctor = await Doctors.findByIdAndUpdate(
     //   { _id: id },
     //   { block: false },
     //   {status:"Approved"}
     // );
-  }
+  },
+  getPrescription: async (req, res) => {
+    try {
+      const user = req.params;
+      console.log("Type of user:", typeof user);
+      const userId = req.params.userId;
+      console.log("User ID:", userId);
+      console.log("Type of userId:", typeof userId);
+
+      const prescriptionsWithDoctors = await Prescription.aggregate([
+        {
+          $match: { userId: new ObjectId(userId) }, // Use mongoose.Types.ObjectId with new keyword
+        },
+        {
+          $lookup: {
+            from: "doctors", // The name of the Doctor collection
+            localField: "doctorId",
+            foreignField: "_id",
+            as: "doctor",
+          },
+        },
+        {
+          $unwind: "$doctor",
+        },
+        {
+          $project: {
+            _id: 1,
+            userId: 1,
+            doctorId: 1,
+            username: 1,
+            title: 1,
+            description: 1,
+            createdAt: 1,
+            updatedAt: 1,
+            __v: 1,
+            doctorName: "$doctor.firstName" ,
+            department: "$doctor.department" // Add the doctor's name to the prescription object
+          },
+        },
+      ]);
+
+      console.log("prescriptionsWithDoctors", prescriptionsWithDoctors);
+
+      if (prescriptionsWithDoctors.length > 0) {
+        res.status(200).json({ getPrescription: prescriptionsWithDoctors });
+      } else {
+        res.status(401).json({ msg: "Prescriptions not found" });
+      }
+    } catch (error) {
+      console.log("Error:", error);
+      res.status(500).json({ msg: "Internal server error" });
+    }
+  },
 };

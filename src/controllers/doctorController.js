@@ -282,7 +282,7 @@ module.exports={
             let Appointmentdata=await Appointments.find({doctorId}).sort({ createdAt: -1 }).populate({
                 path:'userId',
                 select:['-password','-tokens']
-            }).select(" doctorId doctorName payment_status department date time price paymentOwner paymentOwnerEmail createdAt updatedAt __v")
+            }).select(" doctorId doctorName payment_status department date time price paymentOwner paymentOwnerEmail createdAt updatedAt __v status")
           console.log("Appointmentdata of respected doctor",Appointmentdata)
             res.send(Appointmentdata)
         }
@@ -344,6 +344,7 @@ monthlyReport:async(req,res)=>{
     try{
         console.log("montlyuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu")
         const {doctorId} =req.params
+    //    console.log(typeof(doctorId)); 
         console.log("doctorId",doctorId)
         const result =await Appointments.aggregate([
             {
@@ -611,7 +612,32 @@ getUser: (req, res) => {
             console.log("Something error is occured")
         })
     }
+  },
 
+  UpdateStatus:async(req,res)=>{
+    const {appointmentid}=req.params
+    const result=req.body
+    console.log(result)
+    console.log(appointmentid)
+    try{
 
-  }
+        const appointment=await Appointments.findById(appointmentid)
+        if(!appointment)
+        {
+            return res.status(404).json({error:"Appointment not found"})
+        }
+    console.log("appointmentappointment",appointment)
+
+        appointment.status = result.status;
+        console.log("appointment.status",appointment.status)
+        console.log(" result.status", result.status)
+
+        console.log(appointment)
+        await appointment.save();
+    }
+    catch(error) {
+        console.error('Failed to update the appointment status:', error);
+        res.status(500).json({ error: 'Internal server error' });
+      }
+}
 }

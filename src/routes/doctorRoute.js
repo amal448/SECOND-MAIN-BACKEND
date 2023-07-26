@@ -24,6 +24,7 @@ router.get('/singleAppointment/:userId',doctorAuth,doctorController.singleAppoin
 
 router.post('/addprescription',doctorAuth,doctorController.addPrescription)
 router.get('/deletePrescription/:prescriptionId',doctorAuth,doctorController.deletePrescription);
+router.put('/updateStatus/:appointmentid',doctorAuth,doctorController.UpdateStatus)
 
 
 module.exports=router;
