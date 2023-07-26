@@ -102,6 +102,13 @@ module.exports = {
 
           delete req.body.confirmPassword;
           console.log("in try", req.body);
+
+          console.log(
+            "1111111111",
+            process.env.EMAIL,
+            process.env.EMAIL_TEST_APP_PSWD
+          );
+
           new Users({ ...req.body, block: false, active: false })
             .save()
             .then(async (savedUser) => {
