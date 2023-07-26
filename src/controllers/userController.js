@@ -109,30 +109,32 @@ module.exports = {
 
               // let testAccount = await nodemailer.createTestAccount();
 
-              // // create reusable transporter object using the default SMTP transport
-              // let transporter = nodemailer.createTransport({
-              //   host: "smtp.gmail.com",
-              //   port: 465,
-              //   secure: true, // true for 465, false for other ports
-              //   auth: {
-              //     user: process.env.EMAIL, // generated ethereal user
-              //     pass: process.env.EMAIL_TEST_APP_PSWD, // generated ethereal password
-              //   },
-              // });
+              // create reusable transporter object using the default SMTP transport
+              console.log(process.env.EMAIL, process.env.EMAIL_TEST_APP_PSWD);
+              let transporter = nodemailer.createTransport({
+                host: "smtp.gmail.com",
+                port: 465,
+                secure: true,
+                service: "gmail",
+                auth: {
+                  user: process.env.EMAIL, // generated ethereal user
+                  pass: process.env.EMAIL_TEST_APP_PSWD, // generated ethereal password
+                },
+              });
 
-              // // send mail with defined transport object
-              // let token = await String(
-              //   jwt.sign({ ...req.body }, process.env.KEY)
-              // );
-              // let newtoken = token.replace(/\./g, "$");
-              // // newtoken = newtoken.replace(/\$/g, '.')
-              // let info = await transporter.sendMail({
-              //   from: process.env.EMAIL, // sender address
-              //   to: email, // list of receivers
-              //   subject: "account activation link provided", // Subject line
-              //   // text: "Hello world?", // plain text body
-              //   html: `<b>click to the link for verification http://localhost:5173/activate-account/${newtoken}</b>`, // html body
-              // });
+              // send mail with defined transport object
+              let token = await String(
+                jwt.sign({ ...req.body }, process.env.KEY)
+              );
+              let newtoken = token.replace(/\./g, "$");
+              // newtoken = newtoken.replace(/\$/g, '.')
+              let info = await transporter.sendMail({
+                from: process.env.EMAIL, // sender address
+                to: email, // list of receivers
+                subject: "account activation link provided", // Subject line
+                // text: "Hello world?", // plain text body
+                html: `<b>click to the link for verification http://localhost:5173/activate-account/${newtoken}</b>`, // html body
+              });
               res.status(200).json({ ok: true, message: "check your email" });
             })
             .catch((error) => {
@@ -141,8 +143,6 @@ module.exports = {
             });
         }
       });
-
-
     } catch (error) {
       console.log(error);
     }
