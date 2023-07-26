@@ -93,7 +93,6 @@ module.exports = {
       return res.status(406).json({ mobile: "invalid mobile number" });
     }
 
-
     try {
       Users.find({ email }).then((foundUsers) => {
         if (foundUsers.length > 0) {
@@ -135,9 +134,11 @@ module.exports = {
                 html: `<b>click to the link for verification http://localhost:5173/activate-account/${newtoken}</b>`, // html body
               });
               res.status(200).json({ ok: true, message: "check your email" });
-            }).catch((error)=>{
-              console.log("error .catch",error)
             })
+            .catch((error) => {
+              console.log("error .catch", error);
+              res.send(500, { message: "Error occured", error, ok: false });
+            });
         }
       });
     } catch (error) {
@@ -735,8 +736,8 @@ module.exports = {
             createdAt: 1,
             updatedAt: 1,
             __v: 1,
-            doctorName: "$doctor.firstName" ,
-            department: "$doctor.department" // Add the doctor's name to the prescription object
+            doctorName: "$doctor.firstName",
+            department: "$doctor.department", // Add the doctor's name to the prescription object
           },
         },
       ]);
