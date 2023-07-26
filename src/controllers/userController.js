@@ -110,7 +110,11 @@ module.exports = {
               // let testAccount = await nodemailer.createTestAccount();
 
               // create reusable transporter object using the default SMTP transport
-              console.log(process.env.EMAIL, process.env.EMAIL_TEST_APP_PSWD);
+              console.log(
+                "1111111111",
+                process.env.EMAIL,
+                process.env.EMAIL_TEST_APP_PSWD
+              );
               let transporter = nodemailer.createTransport({
                 host: "smtp.gmail.com",
                 port: 465,
