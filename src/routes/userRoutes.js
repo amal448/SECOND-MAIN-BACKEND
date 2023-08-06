@@ -30,6 +30,7 @@ router.get('/user/:userId',userController.getUser)
 router.get('/bookinghistory/:userId',userAuth,userController.bookhistory)
 router.get('/update-appointment',userAuth,userController.updateAppointment)
 router.get('/prescription/:userId',userAuth,userController.getPrescription)
+router.post('/contactemail',userAuth,userController.Contactemail)
 
 
 module.exports=router;

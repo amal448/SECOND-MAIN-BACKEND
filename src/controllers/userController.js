@@ -94,6 +94,7 @@ module.exports = {
     }
 
     try {
+      console.log("popoppopoppopoppopppopopop");
       Users.find({ email }).then((foundUsers) => {
         if (foundUsers.length > 0) {
           return res.status(409).json({ email: "email already exist" });
@@ -128,8 +129,8 @@ module.exports = {
                 secure: true,
                 service: "gmail",
                 auth: {
-                  user: process.env.EMAIL, // generated ethereal user
-                  pass: process.env.EMAIL_TEST_APP_PSWD, // generated ethereal password
+                  user: "amalreact1@gmail.com", // generated ethereal user
+                  pass: "tollbcuapfzqyvmh", // generated ethereal password
                 },
               });
 
@@ -158,6 +159,103 @@ module.exports = {
       console.log(error);
     }
   },
+
+
+
+  // Contactemail:async(req,res)=>{
+
+  //   let result=req.body
+  //   console.log(result)
+  //   let email=result.email
+  //   try {
+  //     console.log("popoppopoppopoppopppopopop");
+  //     Users.find({ email }).then((foundUsers) => {
+  //       if (foundUsers.length > 0) {
+  //         // return res.status(409).json({ email: "email already exist" });
+            
+  //         console.log("in try", req.body);
+        
+  //             let transporter = nodemailer.createTransport({
+  //               host: "smtp.gmail.com",
+  //               port: 465,
+  //               secure: true,
+  //               service: "gmail",
+  //               auth: {
+  //                 user:email, // generated ethereal user
+  //                 pass: "tollbcuapfzqyvmh", // generated ethereal password
+  //               },
+  //             });
+
+  //             // send mail with defined transport object
+             
+  //             let info =  transporter.sendMail({
+  //               from:  email, // sender address
+  //               to:process.env.EMAIL, // list of receivers
+  //               subject: "Enquiry", // Subject line
+  //               // text: "Hello world?", // plain text body
+  //               html: req.body.description
+  //             });
+
+  //             res.status(200).json({ ok: true, message: "check your email" });
+  //           }})
+  //           .catch((error) => {
+  //             console.log("error .catch", error);
+  //             res.send(500, { message: "Error occured", error, ok: false });
+  //           });
+    
+  //       }catch (error) {
+  //         console.log(error);
+  //       }
+     
+  //   } ,
+
+   Contactemail : async (req, res) => {
+    try {
+      let result = req.body;
+      console.log(result);
+      let email = result.email;
+  
+      console.log("popoppopoppopoppopppopopop");
+      const foundUsers = await Users.find({ email });
+  
+      if (foundUsers.length > 0) {
+        let transporter = nodemailer.createTransport({
+          host: "smtp.gmail.com",
+          port: 465,
+          secure: true,
+          service: "gmail",
+          auth: {
+            user: process.env.EMAIL, // admin's email
+            pass: "tollbcuapfzqyvmh", // admin's app password
+          },
+        });
+        
+        const textBody = `UserName: ${result.UserName}\nemail: ${result.email}\n message: ${result.description}`;
+
+        // send mail with defined transport object
+        let info = await transporter.sendMail({
+          from:result.email, // sender address
+          to: process.env.EMAIL, // list of receivers
+          subject: "Enquiry", // Subject line
+          text: textBody, // plain text body
+          // html: result,
+        });
+  
+        res.status(200).json({ ok: true, message: "Check your email" });
+      } else {
+        res.status(409).json({ email: "Email not found" });
+      }
+    } catch (error) {
+      console.log("Error:", error);
+      res.status(500).json({ message: "Error occurred", error, ok: false });
+    }
+  },
+  
+
+
+
+
+
   login: (req, res) => {
     console.log("kkfkkdmmdmmlmlml");
     try {
@@ -617,6 +715,7 @@ module.exports = {
 
       let transporter = nodemailer.createTransport({
         host: "smtp.gmail.com",
+        service: 'gmail',
         port: 465,
         secure: true, // true for 465, false for other ports
         auth: {
@@ -634,6 +733,7 @@ module.exports = {
         // text: "Hello world?", // plain text body
         html: link, // html body
       });
+      res.status(200).json({ res:true});
     } catch (error) {
       console.log("is here error");
       console.log(error);

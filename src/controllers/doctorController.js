@@ -318,10 +318,11 @@ module.exports={
 getFullPayment:async(req,res)=>{
 const {doctorId}=req.params
 try{
+    console.log("lllllllllllllllllllllllldoododododod")
     const payment =await Appointments.aggregate([
         {
             $match :{
-                doctorId: (doctorId)
+                doctorId: new mongoose.Types.ObjectId(doctorId)
             }
         },
         {
@@ -346,10 +347,11 @@ monthlyReport:async(req,res)=>{
         const {doctorId} =req.params
     //    console.log(typeof(doctorId)); 
         console.log("doctorId",doctorId)
+        
         const result =await Appointments.aggregate([
             {
                 $match :{
-                    doctorId:(doctorId)
+                    doctorId:new mongoose.Types.ObjectId(doctorId)
                 }
             },
             {
@@ -434,7 +436,7 @@ weeklyReport:async(req,res)=>{
         const result = await Appointments.aggregate([
             {
                 $match: {
-                    doctorId: (doctorId)
+                    doctorId: new mongoose.Types.ObjectId(doctorId)
                 }
             },
             {
@@ -462,15 +464,16 @@ weeklyReport:async(req,res)=>{
     }
 },
 dailyReport:async(req,res)=>{
+    console.log("entered indcninic")
     try {
         const doctorId = req.doctor;
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const result = await Appointment.aggregate([
+        const result = await Appointments.aggregate([
           {
             $match: {
               date: { $gte: today },
-              doctorId: (doctorId),
+              doctorId: new mongoose.Types.ObjectId(doctorId),
             },
           },
           {
@@ -496,7 +499,7 @@ getYearlyReport:async(req,res)=>{
         const result = await Appointments.aggregate([
             {
                 $match: {
-                    doctorId: (doctorId)
+                    doctorId:new mongoose.Types.ObjectId(doctorId)
                 }
             },
             {
@@ -593,7 +596,23 @@ getUser: (req, res) => {
             title,
             description
         });
-        newPrescription.save();
+        newPrescription.save()
+
+        console.log("lakakakakakakakak");
+        const appointment = await Appointments.findOne({ userId: userId });
+        if (!appointment) {
+          return res.status(404).json({ error: "Appointment not found" });
+        }
+    
+        // Update the status of the appointment to "completed"
+        appointment.status = "completed";
+        await appointment.save();
+    
+
+
+
+
+
         res.status(201).json({ success: "data created successfully" })
 
     } catch (error) {
@@ -615,6 +634,8 @@ getUser: (req, res) => {
   },
 
   UpdateStatus:async(req,res)=>{
+    console.log(" resultooooooooooooooooooooooooooooooooooooooooooooooooooostatus")
+
     const {appointmentid}=req.params
     const result=req.body
     console.log(result)
@@ -626,14 +647,32 @@ getUser: (req, res) => {
         {
             return res.status(404).json({error:"Appointment not found"})
         }
-    console.log("appointmentappointment",appointment)
+        else 
+        {
+           let check=await Prescription.findOne({ userId: appointment?.userId })
+           console.log("PrescriptionPrescriptionPrescription",check)
 
-        appointment.status = result.status;
-        console.log("appointment.status",appointment.status)
-        console.log(" result.status", result.status)
+            if (check)
+            {
+                console.log(" hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh")
 
-        console.log(appointment)
-        await appointment.save();
+                appointment.status = result.status;
+                console.log("appointment.status",appointment.status)
+                console.log(" result.status", result.status)
+        
+                console.log(appointment)
+                await appointment.save();
+            }
+            else
+            {
+            return res.status(404).json({error:"Appointment not found"})
+
+            }
+            console.log(" nshiiiiiiiiiiiiiiiiiiiiii")
+
+        }
+        // console.log("appointmentappointment",appointment)
+
     }
     catch(error) {
         console.error('Failed to update the appointment status:', error);
