@@ -31,6 +31,6 @@ router.get('/bookinghistory/:userId',userAuth,userController.bookhistory)
 router.get('/update-appointment',userAuth,userController.updateAppointment)
 router.get('/prescription/:userId',userAuth,userController.getPrescription)
 router.post('/contactemail',userAuth,userController.Contactemail)
-
+router.get('/doctor/:doctorId',userController.getDoctor)
 
 module.exports=router;

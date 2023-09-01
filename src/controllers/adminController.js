@@ -503,7 +503,7 @@ module.exports = {
           to: approveDoctor?.email, // list of receivers
           subject: "Doctor Applcation Approved by Admin", // Subject line
           // text: "Hello world?", // plain text body
-          html: "<b>Hello world?</b>", // html body
+          html: "<b>Message</b>", // html body
         });
 
         // console.log("Message sent: %s", info.messageId);
@@ -558,7 +558,7 @@ module.exports = {
           to: rejectDoctor?.email, // list of receivers
           subject: "Doctor Application was Rejected by Admin", // Subject line
           // text: "Hello world?", // plain text body
-          html: "<b>Hello world?</b>", // html body
+          html: "<b>Message?</b>", // html body
         });
 
         // console.log("Message sent: %s", info.messageId);
@@ -666,7 +666,7 @@ module.exports = {
   getAllDataCount:(async (req, res) => {
     try {
         const patients = await Users.find({});
-        const doctors = await Doctors.find({ status: 'approved' });
+        const doctors = await Doctors.find({ status: 'Approved' });
         const appointments = await Appointment.find();
         const price = await Appointment.aggregate([
             {

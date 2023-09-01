@@ -145,7 +145,10 @@ module.exports = {
                 to: email, // list of receivers
                 subject: "account activation link provided", // Subject line
                 // text: "Hello world?", // plain text body
+                
                 html: `<b>click to the link for verification http://localhost:5173/activate-account/${newtoken}</b>`, // html body
+                // html: `<b>click to the link for verification https://celadon-blancmange-e713f5.netlify.app/activate-account/${newtoken}</b>`, // html body
+                
               });
               res.status(200).json({ ok: true, message: "check your email" });
             })
@@ -707,8 +710,9 @@ module.exports = {
       console.log("token", newtoken);
       console.log("user._id", user._id);
 
-      // console.log("newtoken",newtoken) /activate-account/:userid/:token
-      // const link =`<a href="${process.env.CLIENT_URL}/reset-password/${user._id}/${newtoken}">Click to reset password </a>`;
+   /////now put forgot urllll
+  //  const link = `<a href="https://celadon-blancmange-e713f5.netlify.app/foractivate-account/${user._id}/${newtoken}">Click to reset password </a>`;
+
       const link = `<a href="${process.env.CLIENT_URL}/foractivate-account/${user._id}/${newtoken}">Click to reset password </a>`;
 
       let testAccount = await nodemailer.createTestAccount();
@@ -867,4 +871,23 @@ module.exports = {
       res.status(500).json({ msg: "Internal server error" });
     }
   },
+  getDoctor:async (req, res) => {
+    console.log("00000000000000000000000000000000000000000000000000000000000000000000000000")
+    try{
+      
+      const {doctorId} =req.params
+      console.log("doctorId121",doctorId)
+      Doctors.find({ _id: doctorId }).then((response) => {
+        console.log("poooooooooooooooooooooooooooooooooooooooooooooo", response);
+        res.status(200).json({ doctor: response });
+      }).catch((err)=>{
+        console.log(err)
+      });
+    }
+    catch(error)
+    {
+      console.log(error)
+    }
+
+},
 };
