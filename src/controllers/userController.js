@@ -146,8 +146,8 @@ module.exports = {
                 subject: "account activation link provided", // Subject line
                 // text: "Hello world?", // plain text body
                 
-                html: `<b>click to the link for verification http://localhost:5173/activate-account/${newtoken}</b>`, // html body
-                // html: `<b>click to the link for verification https://celadon-blancmange-e713f5.netlify.app/activate-account/${newtoken}</b>`, // html body
+                // html: `<b>click to the link for verification http://localhost:5173/activate-account/${newtoken}</b>`, // html body
+                html: `<b>click to the link for verification https://celadon-blancmange-e713f5.netlify.app/activate-account/${newtoken}</b>`, // html body
                 
               });
               res.status(200).json({ ok: true, message: "check your email" });
