@@ -711,9 +711,9 @@ module.exports = {
       console.log("user._id", user._id);
 
    /////now put forgot urllll
-  //  const link = `<a href="https://celadon-blancmange-e713f5.netlify.app/foractivate-account/${user._id}/${newtoken}">Click to reset password </a>`;
+   const link = `<a href="https://celadon-blancmange-e713f5.netlify.app/foractivate-account/${user._id}/${newtoken}">Click to reset password </a>`;
 
-      const link = `<a href="${process.env.CLIENT_URL}/foractivate-account/${user._id}/${newtoken}">Click to reset password </a>`;
+      // const link = `<a href="${process.env.CLIENT_URL}/foractivate-account/${user._id}/${newtoken}">Click to reset password </a>`;
 
       let testAccount = await nodemailer.createTestAccount();
 
