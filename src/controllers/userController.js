@@ -723,8 +723,8 @@ module.exports = {
         port: 465,
         secure: true, // true for 465, false for other ports
         auth: {
-          user: process.env.EMAIL, // generated ethereal user
-          pass: process.env.EMAIL_TEST_APP_PSWD, // generated ethereal password
+          user: process.env.EMAIL?.trim(), // generated ethereal user
+          pass: process.env.EMAIL_TEST_APP_PSWD?.trim(), // generated ethereal password
         },
       });
 
